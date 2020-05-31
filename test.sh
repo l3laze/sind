@@ -7,10 +7,15 @@ set -euo pipefail
 
 source ./sind.sh
 
-userChoice=$(sind "Choose one (Up/Down, Enter to choose)" "  Yes   " "   No   " " Batman " " Cancel ")
-case "$userChoice" in
-  0) echo "selected Yes";;
-  1) echo "selected No";;
-  2) echo "selected Batman";;
-  3) echo "selected Cancel";;
-esac
+hr () {
+  # From https://stackoverflow.com/a/42762743
+  printf '\n%*s\n\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
+
+userChoice=$(sind "Choose one (↑/j or ↓/k, Enter to choose)" "  Yes   " "   No   " " Batman " " Cancel ")
+
+hr
+
+echo -e "Selected $userChoice"
+
+hr

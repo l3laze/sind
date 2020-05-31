@@ -36,6 +36,8 @@ select_option () {
       if [[ "$key" == $'\n' ]]; then echo "enter"; break; fi
       if [[ "$key" == $'\t' ]]; then echo "tab"; break; fi
       if [[ "$key" == $'\b' ]]; then echo "backspace"; break; fi
+      if [[ "$key" == 'j' ]]; then echo "up"; break; fi
+      if [[ "$key" == 'k' ]]; then echo "down"; break; fi
       if [[ "$key" == "${ESC}" ]]; then
         # Read 2 more bytes if it's an escape sequence, or nothing if it's just Esc.
         read -rsN 2 -t 0.001
@@ -101,7 +103,9 @@ select_option () {
 }
 
 sind () {
-  select_option "$@" 1>&2
+  $(select_option "$@" 1>&2)
   local result=$?
-  echo $result
+  shift
+  read -a arr <<< $@
+  echo ${arr[result]}
 }
