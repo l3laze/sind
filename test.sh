@@ -7,18 +7,54 @@ set -euo pipefail
 
 source ./sind.sh
 
-userChoice=$(sind "Choose one" "  Yes   " "   No   " " Batman " " Cancel ")
-case "$userChoice" in
-  0) echo "selected Yes";;
-  1) echo "selected No";;
-  2) echo "selected Batman";;
-  3) echo "selected Cancel";;
-esac
+hr () {
+  # From https://stackoverflow.com/a/42762743
+  printf '\n%*s\n\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
 
-userChoice=$(sind $'Choose one...\nFrom this...\nHere list...' "  Yes   " "   No   " " Batman " " Cancel ")
-case "$userChoice" in
-  0) echo "selected Yes";;
-  1) echo "selected No";;
-  2) echo "selected Batman";;
-  3) echo "selected Cancel";;
-esac
+# : <<'END_COMMENT'
+# END_COMMENT
+
+userChoice=$(sind "Choose one..." "  Yes   " "   No   " " Batman " " Cancel ")
+
+hr
+
+echo "Selected $userChoice"
+
+sleep 1s
+
+userChoice=$(sind $'Choose one...\nThis is a big title.\nMany lines.\nMuch words.\nVery wow.' "  Yes   " "   No   " " Batman " " Cancel ")
+
+hr
+
+echo -e "Selected $userChoice"
+
+sleep 1s
+
+while true; do
+
+  userChoice=$(sind "Choose one (No = loop)..." "  Yes   " "   No   " " Batman " " Cancel ")
+
+  case $userChoice in
+    'Yes')
+      hr
+      echo 'Good... Good.'
+      break
+    ;;
+  
+    'Batman')
+      hr
+      echo 'I am the night.'
+      break
+    ;;
+  
+    'Cancel')
+      hr
+      echo 'Fine...'
+      break
+    ;;
+
+    *)
+    ;;
+  esac
+done

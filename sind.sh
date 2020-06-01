@@ -59,9 +59,8 @@ select_option () {
 
   local selected=1
   local title="$1"
-  shift
-
   local directions="(↑/j or ↓/k, Enter to choose)"
+  shift
 
   printf "%s" "$title"
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
@@ -70,7 +69,7 @@ select_option () {
   local height=$(get_cursor_row)
 
   while true; do
-    # print options by overwriting the last lines from title down
+    # print options by overwriting the lines from title down
     local idx=$((height))
     for opt; do
       cursor_to $((idx + 1))
@@ -101,15 +100,17 @@ select_option () {
   done
 
   # cursor position and echo back to normal
-  stty echo > /dev/null 2>&1
-  printf "\n"
   cursor_blink_on
+  stty echo > /dev/null 2>&1
+  printf ""
 
   return $((selected - 1))
 }
 
 sind () {
-  select_option "$@" 1>&2
+  $(select_option "$@" 1>&2)
   local result=$?
-  echo $result
+  shift
+  read -a arr <<< $@
+  echo ${arr[result]}
 }
