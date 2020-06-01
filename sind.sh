@@ -55,21 +55,26 @@ select_option () {
   # ensure cursor and input echoing back on upon a ctrl+c during read -s
   trap "stty echo > /dev/null 2>&1; cursor_blink_on; exit" 2
   cursor_blink_off
+  clear
 
   local selected=1
   local title="$1"
+  local directions="(↑/j or ↓/k, Enter to choose)"
   shift
 
-  clear
   printf "%s" "$title"
+  printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+  printf "%s\n" "$directions"
+
+  local height=$(get_cursor_row)
 
   while true; do
-    # print options by overwriting the last lines from title down
-    local idx=1
+    # print options by overwriting the lines from title down
+    local idx=$((height))
     for opt; do
       cursor_to $((idx + 1))
       printf '\e[2K' # Erase current line.
-      if [ $idx -eq $selected ]; then
+      if [ $((idx - height + 1)) -eq $selected ]; then
         print_selected "$opt"
       else
         print_option "$opt"
@@ -95,9 +100,9 @@ select_option () {
   done
 
   # cursor position and echo back to normal
-  stty echo > /dev/null 2>&1
-  printf "\n"
   cursor_blink_on
+  stty echo > /dev/null 2>&1
+  printf ""
 
   return $((selected - 1))
 }
