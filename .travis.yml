@@ -1,0 +1,8 @@
+os:
+  - linux
+
+before_script:
+  - chmod u+x ./*.sh
+
+script:
+  - shellcheck ./*.sh

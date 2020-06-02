@@ -22,7 +22,8 @@ select_option () {
   cursor_to ()        { printf "%s" "${ESC}[$1;${2:-1}H"; }
   print_option ()     { printf "%s" "$1"; }
   print_selected ()   { printf "%s" "${ESC}[7m$1${ESC}[27m"; }
-  get_cursor_row ()   { IFS=';' read -rsdR -p $'\E[6n' ROW COL; echo "${ROW#*[}"; echo "$COL" > /dev/null; }
+  get_cursor_row ()   { read -rsN 100 -t 0.01; IFS=';' read -rsdR -t 0.1 -p $'\E[6n' ROW COL; echo "${ROW#*[}"; echo "$COL" > /dev/null; }
+
   key_input () {
     IFS=;
     local key
@@ -66,7 +67,9 @@ select_option () {
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
   printf "%s\n" "$directions"
 
-  local height=$(get_cursor_row)
+  local height
+
+  height=$(get_cursor_row)
 
   while true; do
     # print options by overwriting the lines from title down
@@ -88,11 +91,11 @@ select_option () {
       enter) break;;
       up)
         ((selected--));
-        if [ $selected -lt 1 ]; then selected=$(($#)); fi
+        if [ "$selected" -lt 1 ]; then selected=$(($#)); fi
       ;;
       down)
         ((selected++));
-        if [ $selected -gt $# ]; then selected=1; fi
+        if [ "$selected" -gt $# ]; then selected=1; fi
       ;;
       *)
       ;;
@@ -108,9 +111,10 @@ select_option () {
 }
 
 sind () {
-  $(select_option "$@" 1>&2)
+  select_option "$@" 1>&2
   local result=$?
   shift
-  read -a arr <<< $@
-  echo ${arr[result]}
+  # shellcheck disable=SC2162
+  read -a arr <<< "$@"
+  echo "${arr[result]}"
 }
