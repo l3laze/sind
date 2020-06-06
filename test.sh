@@ -9,7 +9,7 @@ source ./sind.sh
 
 hr () {
   # From https://stackoverflow.com/a/42762743
-  printf '\n%*s\n\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+  printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 }
 
 # : <<'END_COMMENT'
@@ -21,13 +21,15 @@ hr
 
 echo "Selected $userChoice"
 
+: <<'END_COMMENT'
+
 sleep 1s
 
 userChoice=$(sind $'Choose one...\nThis is a big title.\nMany lines.\nMuch words.\nVery wow.' "  Yes   " "   No   " " Batman " " Cancel ")
 
 hr
 
-echo -e "Selected $userChoice"
+echo "Selected $userChoice"
 
 sleep 1s
 
@@ -58,3 +60,5 @@ while true; do
     ;;
   esac
 done
+
+END_COMMENT

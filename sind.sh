@@ -17,23 +17,32 @@ select_option () {
   local ESC
   # little helpers for terminal print control and key input
   ESC=$(printf "\033")
-  cursor_blink_on ()  { printf "%s" "${ESC}[?25h"; }
-  cursor_blink_off () { printf "%s" "${ESC}[?25l"; }
-  cursor_to ()        { printf "%s" "${ESC}[$1;${2:-1}H"; }
-  print_option ()     { printf "%s" "$1"; }
-  print_selected ()   { printf "%s" "${ESC}[7m$1${ESC}[27m"; }
-  get_cursor_row ()   { read -rsN 100 -t 0.01; IFS=';' read -rsdR -t 0.1 -p $'\E[6n' ROW COL; echo "${ROW#*[}"; echo "$COL" > /dev/null; }
 
+  cursor_blink_on ()  { printf "%s" "${ESC}[?25h"; }
+
+  cursor_blink_off () { printf "%s" "${ESC}[?25l"; }
+
+  cursor_to ()        { printf "%s" "${ESC}[$1;${2:-1}H"; }
+
+  print_option ()     { printf "%s" "$1"; }
+
+  print_selected ()   { printf "%s" "${ESC}[7m$1${ESC}[27m"; }
+
+# read -rsN 100 -t 0.01; 
+  get_cursor_row ()   { IFS=';' read -rsdR -t 0.1 -p $'\E[6n' ROW COL; echo "${ROW#*[}"; echo "$COL" > /dev/null; }
+
+  clear_down ()       { printf "%s" "${ESC}[J"; }
+ 
   key_input () {
     IFS=;
     local key
-
-    read -rsN 100 -t 0.001
-
+ 
+    # read -rsN 100 -t 0.01
+ 
     while true; do
       read -rsN 1 # Read first byte of key
       key=$REPLY
-
+ 
       if [[ "$key" == $'\n' ]]; then echo "enter"; break; fi
       if [[ "$key" == $'\t' ]]; then echo "tab"; break; fi
       if [[ "$key" == $'\b' ]]; then echo "backspace"; break; fi
@@ -41,13 +50,13 @@ select_option () {
       if [[ "$key" == 'k' ]]; then echo "down"; break; fi
       if [[ "$key" == "${ESC}" ]]; then
         # Read 2 more bytes if it's an escape sequence, or nothing if it's just Esc.
-        read -rsN 2 -t 0.001
+        read -rsN 2 -t 0.01
         
         [[ "$REPLY" != "" ]] && key+="$REPLY"
         if [[ "$key" == "${ESC}[A" ]]; then echo "up"; break; fi
         if [[ "$key" == "${ESC}[B" ]]; then echo "down"; break; fi
         if [[ "$key" == "${ESC}" ]]; then echo "esc"; break; fi
-
+ 
         key=;
       fi
     done
@@ -56,19 +65,20 @@ select_option () {
   # ensure cursor and input echoing back on upon a ctrl+c during read -s
   trap "stty echo > /dev/null 2>&1; cursor_blink_on; exit" 2
   cursor_blink_off
-  clear
 
   local selected=1
-  local title="$1"
   local directions="(↑/j or ↓/k, Enter to choose)"
+  local title="$1"
   shift
+
+  local args
+  read -a args <<< "$@"
 
   printf "%s" "$title"
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
   printf "%s\n" "$directions"
 
   local height
-
   height=$(get_cursor_row)
 
   while true; do
@@ -103,9 +113,9 @@ select_option () {
   done
 
   # cursor position and echo back to normal
-  cursor_blink_on
   stty echo > /dev/null 2>&1
-  printf ""
+  printf "\n"
+  cursor_blink_on
 
   return $((selected - 1))
 }

@@ -2,7 +2,7 @@ os:
   - linux
 
 before_script:
-  - chmod u+x ./*.sh
+  - chmod u+x ./sind.sh
 
 script:
-  - shellcheck ./*.sh
+  - shellcheck ./sind.sh
