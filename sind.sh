@@ -2,13 +2,6 @@
 
 # This script is based on code by Alexander Klimetschek at
 # https://unix.stackexchange.com/a/415155/310780
-#
-# Renders a text based list of options that can be selected by the
-# user using up, down and enter keys and returns the chosen option.
-#
-#   Arguments   : list of options, maximum of 256
-#                 "opt1" "opt2" ...
-#   Return value: selected index (0 for opt1, 1 for opt2 ...)
 
 set -e
 
@@ -65,36 +58,47 @@ select_option () {
   # ensure cursor and input echoing back on upon a ctrl+c during read -s
   trap "stty echo > /dev/null 2>&1; cursor_blink_on; exit" 2
   cursor_blink_off
+  # printf '\033[0J'
 
   local selected=1
   local directions="(↑/j or ↓/k, Enter to choose)"
-  local title="$1"
-  shift
+  local title
+  title=$(echo -e "$2")
+
+  local mode="$1"
+  shift; shift
 
   local args
+  # shellcheck disable=SC2162
   read -a args <<< "$@"
 
   printf "%s" "$title"
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
   printf "%s\n" "$directions"
 
-  local height
-  height=$(get_cursor_row)
+  if [ "$mode" != "line" ]; then
+    printf "%s\n" "${args[@]}"
+  fi
 
   while true; do
-    # print options by overwriting the lines from title down
-    local idx=$((height))
-    for opt; do
-      cursor_to $((idx + 1))
-      printf '\e[2K' # Erase current line.
-      if [ $((idx - height + 1)) -eq $selected ]; then
-        print_selected "$opt"
-      else
-        print_option "$opt"
-      fi
-      printf '\n'
-      ((idx++))
-    done
+    if [ "$mode" != "line" ]; then
+      printf "\033[%sA\033[2K" "$((${#args} + 1))"
+      idx=1
+  
+      for opt in "${args[@]}"; do
+        printf "\033[1B\033[1000D\033[2K"
+        if [ "$idx" -eq "$selected" ]; then
+          print_selected "$opt"
+        else
+          print_option "$opt"
+        fi
+  
+        ((idx++))
+      done
+    else
+      printf '\033[2K\033[1000D'
+      print_selected "${args[$((selected - 1))]}"
+    fi
 
     # user key control
     case $(key_input) in
@@ -123,7 +127,7 @@ select_option () {
 sind () {
   select_option "$@" 1>&2
   local result=$?
-  shift
+  shift; shift
   # shellcheck disable=SC2162
   read -a arr <<< "$@"
   echo "${arr[result]}"
