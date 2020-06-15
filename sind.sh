@@ -4,10 +4,13 @@
 # https://unix.stackexchange.com/a/415155/310780
 #
 
-set -e
+set -euo pipefail
 
-# shellcheck disable=SC1091
-source ./hr.sh
+# From https://stackoverflow.com/a/42762743
+
+hr () {
+  printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
 
 select_option () {
   stty -echo
@@ -49,7 +52,7 @@ select_option () {
     done
   }
 
-  trap "stty echo > /dev/null 2>&1; cursor_on; exit" 2
+  trap "stty echo > /dev/null 2>&1; cursor_on; exit 1" 2
   cursor_off
 
   local selected=1
@@ -114,15 +117,40 @@ select_option () {
   return $((selected - 1))
 }
 
-sind () {
-  if [[ "$#" -lt 3 ]]; then
-    printf "\nERROR: Not enough arguments.\n\n"
-    exit
-  fi
+commandline () {
+  local version="2.0.0"
+  local self="${BASH_SOURCE[0]}"
+  local usage="USAGE: $(basename ${self##*/}) <command> <title> [opts]\n\
+    mode  - "list" | "line".\n\
+    title - Title/message above options.\n\
+    opts  - 2+ space-separated options."
 
+  if [[ "${1:-}" =~ (--)?version ]]; then
+    echo >&2 "$version" && exit 1
+  elif [[ "${1:-}" =~ (--)?help ]]; then
+    echo -e >&2 "$usage" && exit 1
+  elif [[ "$#" -lt 3 ]]; then
+    echo -e >&2 "\nERROR: Not enough options.\n\n$usage\n\n" && exit 1
+  elif [[ ! "$1" =~ ^(line|list)$ ]]; then
+    echo -e >&2 "\nERROR: Unknown command \"$1\"\n\n$usage\n\n" && exit 1
+  fi
+}
+
+sind () {
+  commandline "$@"
   select_option "$@" 1>&2
   local result=$?
   shift; shift
   read -ra arr <<< "$@"
   echo "${arr[result]}"
 }
+
+# Error when called directly
+
+if [[ $(basename -- "$0") == $(basename -- "${BASH_SOURCE[0]}") ]]; then
+  if [[ "${1:-}" =~ (--)?(version) ]]; then
+    commandline "$@" && exit 1
+  else
+    echo -e "\n${self##*/} - ERROR: This cannot be called directly." && exit 1
+  fi
+fi
