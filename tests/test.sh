@@ -8,7 +8,6 @@ set -euo pipefail
 source ./sind.sh
 
 # From https://stackoverflow.com/a/42762743
-
 hr () {
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 }
@@ -54,6 +53,11 @@ case "$1" in
   7)
     userChoice=$(sind "line" "Choose one...\nThis is the title.")
     # Should error: not enough options.
+  ;;
+
+  8)
+    userChoice=$(sind "line" "Choose one..." "  Yes   " "   No   " " Batman " " Cancel ")
+    printf "Selected %s\n" "$userChoice"
   ;;
 
   *)

@@ -7,7 +7,6 @@
 set -euo pipefail
 
 # From https://stackoverflow.com/a/42762743
-
 hr () {
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 }
@@ -111,7 +110,7 @@ select_option () {
   done
 
   stty echo > /dev/null 2>&1
-  printf "\n\033[1A"
+  printf "\n" # printf "\n\033[1A"
   cursor_on
 
   return $((selected - 1))
@@ -151,6 +150,6 @@ if [[ $(basename -- "$0") == $(basename -- "${BASH_SOURCE[0]}") ]]; then
   if [[ "${1:-}" =~ (--)?(version) ]]; then
     commandline "$@" && exit 1
   else
-    echo -e "\n${self##*/} - ERROR: This cannot be called directly." && exit 1
+    echo -e "ERROR: This cannot be called directly." && exit 1
   fi
 fi

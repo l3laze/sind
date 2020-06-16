@@ -8,11 +8,24 @@ Simple interactive dialog for shells. Developed for Bash 4+ using Ubuntu 18+ thr
 
 ## Usage
 
-`source ./sind.sh`
+```
+source ./sind.sh
 
-`userChoice=$(sind "Choose one..." "  Yes   " "   No   " " Batman " " Cancel ")`
+userChoice=$(sind "line" "Choose one..." "  Yes   " "   No   " " Batman " " Cancel ")
 
-`echo -e "\nSelected $userChoice"`
+printf "\nSelected %s\n" "$userChoice"
+```
+
+
+#### Output:
+
+```
+Choose one...
+-----------------------------------------------------------
+(↑/j or ↓/k, Enter to choose)
+Batman   # Background will be colored...
+Selected Batman
+```
 
 
 ----

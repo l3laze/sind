@@ -33,19 +33,15 @@
       echo >&2 "Failed to parse latest version info."
     }
 
-    printf "Installing latest \"sind\" @ %s.\n." "$version"
+    printf "Installing latest \"sind\" @ %s.\n" "$version"
 
     do_download -s -o "/usr/local/bin/sind" "https://raw.githubusercontent.com/l3laze/sind/""$version""/sind.sh" || {
       echo >&2 "Failed to download sind.sh"
     }
 
-    printf "."
-
     chmod u+x "/usr/local/bin/sind" || {
       echo >&2 "Failed to chmod /usr/local/bin/sind"
     }
-
-    printf ".\n"
 
     if ! command -v sind > /dev/null 2>&1; then
       echo >&2 "Installation failed. Run for your life!"
