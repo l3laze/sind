@@ -118,11 +118,12 @@ select_option () {
 
 commandline () {
   local version="2.0.0"
-  local self="${BASH_SOURCE[0]}"
-  local usage="USAGE: $(basename ${self##*/}) <command> <title> [opts]\n\
-    mode  - "list" | "line".\n\
-    title - Title/message above options.\n\
-    opts  - 2+ space-separated options."
+  local self
+  local usage
+
+  self="${BASH_SOURCE[0]}"
+  self=$(basename "$self")
+  usage="USAGE: ${self##*/} <command> <title> [opts]\n    mode  - \"list\" | \"line\".\n    title - Title/message above options.\n    opts  - 2+ space-separated options."
 
   if [[ "${1:-}" =~ (--)?version ]]; then
     echo >&2 "$version" && exit 1

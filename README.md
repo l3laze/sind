@@ -17,7 +17,7 @@ printf "\nSelected %s\n" "$userChoice"
 ```
 
 
-#### Output:
+##### Output:
 
 ```
 Choose one...
@@ -31,14 +31,10 @@ Selected Batman
 ----
 
 
-## Install
-
-`wget https://github.com/l3laze/sind/releases/latest -O /usr/local/bin/sind.sh && chmod u+x /usr/local/bin/sind.sh`
-
-`curl https://github.com/l3laze/sind/releases/latest -o /usr/local/bin/sind.sh && chmod u+x ./usr/local/bin/sind.sh`
+## Installation
 
 
-[https://github.com/l3laze/sind/install.sh](https://github.com/l3laze/sind/install.sh)
+Download `sind.sh` and place in a directory that's available from your `$PATH` or to the project that you're working on. The best place is `~/bin` to make it available to the current user (though it may not exist by default). For a system-wide install `/usr/local/bin` is best, based on the [Linux filesystem hierarchy](https://linux.die.net/man/7/hier) and related answers on [StackExchange](https://unix.stackexchange.com/questions/8656/usr-bin-vs-usr-local-bin-on-linux).
 
 
 ----
@@ -47,8 +43,8 @@ Selected Batman
 ## Credits
 
 
-- [Alexander Klimetschek and his Stack Exchange answer](https://unix.stackexchange.com/a/415155/310780)
--
+- [Alexander Klimetschek's Stack Exchange answer](https://unix.stackexchange.com/a/415155/310780)
+- [mtfurlan's vi keybinding patch/idea](https://github.com/l3laze/sind/issues/1)
 
 
 ----
@@ -60,10 +56,11 @@ Selected Batman
 Please ensure your pull request adheres to the following guidelines:
 
 
-- **Please [open an issue](https://github.com/l3laze/sind/issues) before creating any new features**.
-- Bug fixes are more than welcome.
+- **Please [open an issue](https://github.com/l3laze/sind/issues) before creating any new features**, for discussion.
+- Bug fixes & POSIX-friendly changes are more than welcome!
 - Check your spelling and grammar (if applicable).
-- Make sure your text editor is set to remove trailing whitespace.
+- Try to use a text editor that will remove trailing whitespace (though mine on mobile can't..lol).
+- Pass [shellcheck.net](https://www.shellcheck.net/). It is tested on push by Travis-CI, but doing so while developing helps minimize senseless Travis builds which are a waste of their resources.
 
 
 ----
