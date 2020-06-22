@@ -12,8 +12,10 @@ hr () {
   printf '\n%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 }
 
-if [[ ! "$1" =~ [[:digit:]]+ ]]; then
-  echo >&2 "Not a number: $1"
+if [[ "${1:-}x" == "x" ]]; then
+  echo >&2 "No test specified." && exit 1
+elif [[ ! "$1" =~ [[:digit:]]+ ]]; then
+  echo >&2 "Not a number: $1" && exit 1
 fi
 
 case "$1" in

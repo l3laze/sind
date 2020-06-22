@@ -102,7 +102,7 @@ select_option () {
       ;;
       down)
         ((selected++));
-        if [ "$selected" -gt $# ]; then selected=1; fi
+        if [ "$selected" -gt "$#" ]; then selected=1; fi
       ;;
       *)
       ;;
@@ -117,7 +117,7 @@ select_option () {
 }
 
 commandline () {
-  local version="2.0.0"
+  local version="3.0.1"
   local self
   local usage
 
