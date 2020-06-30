@@ -3,6 +3,9 @@ os:
 
 before_script:
   - chmod u+x ./sind.sh
+  - chmod u+x ./test.sh
 
 script:
   - shellcheck ./sind.sh
+  - shellcheck ./test.sh
+  - ./test.sh

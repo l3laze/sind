@@ -3,17 +3,15 @@
 
 Simple interactive dialog for shells. Developed for Bash 4+ using Ubuntu 18+ through [UserLAnd on Android](https://play.google.com/store/apps/details?id=tech.ula).
 
-[![Build Status](https://travis-ci.org/l3laze/sind.svg?branch=master)](https://travis-ci.org/l3laze/sind)
+[![Build Status](https://travis-ci.org/l3laze/sind.svg?branch=master)](https://travis-ci.org/l3laze/sind) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2ab42793e643443e8918b82ef55de98a)](https://www.codacy.com/manual/l3laze/sind?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=l3laze/sind&amp;utm_campaign=Badge_Grade)
 
 
 ## Usage
 
-```
-source ./sind.sh
+```sh
+userChoice="$(./sind.sh -t Title -o 'Okay')"
 
-userChoice=$(sind "line" "Choose one..." "  Yes   " "   No   " " Batman " " Cancel ")
-
-printf "\nSelected %s\n" "$userChoice"
+printf "%s\n" "$userChoice"
 ```
 
 
@@ -23,8 +21,10 @@ printf "\nSelected %s\n" "$userChoice"
 Choose one...
 -----------------------------------------------------------
 (↑/j or ↓/k, Enter to choose)
-Batman   # Background will be colored...
-Selected Batman
+Okay
+Cancel < -- background of selected will be colored.
+-----------------------------------------------------------
+Cancel
 ```
 
 
