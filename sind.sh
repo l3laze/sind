@@ -2,11 +2,6 @@
 
 set -euo pipefail
 
-if [[ "${SIND_DEBUG_MODE:-}" -eq 1 ]]; then
-  export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }\n'
-  set -x
-fi
-
 #
 # Follows the suggested exit code range of 0 & 64-113
 # from http://www.tldp.org/LDP/abs/html/exitcodes.html
@@ -28,32 +23,19 @@ key_input () {
   read -rsN 1
   key="$REPLY"
 
-    if [[ "$key" =~ ^[A-Za-z0-9]$ ]]; then echo "$key";
-  elif [[ "$key" == $'\t' ]]; then echo "tab";
-  elif [[ "$key" == $'\b' ]]; then echo "backspace";
-  elif [[ "$key" == $'\n' ]]; then echo "enter";
-  elif [[ "$key" == $' ' ]]; then echo "space";
-  elif [[ "$key" == $'\x7f' ]]; then echo "del";
+    if [[ "$key" =~ ^[A-Za-z0-9]$ ]]; then printf "%s" "$key";
+  elif [[ "$key" == $'\n' ]]; then printf "enter";
+  elif [[ "$key" == $' ' ]]; then printf "space";
   elif [[ "$key" == $'\e' ]]; then
     # Try to read 2 more bytes in case it's an escape sequence
     # 4-byte sequences would require another layer of handling, with the 1 extra byte read
     read -rsN 2 -t 0.01
 
-      if [[ "$REPLY" == "[A" ]]; then echo "up";
-    elif [[ "$REPLY" == "[B" ]]; then echo "down";
-    elif [[ "$REPLY" == "[C" ]]; then echo "right";
-    elif [[ "$REPLY" == "[D" ]]; then echo "left";
-    elif [[ "$REPLY" == "[F" ]]; then echo "end";
-    elif [[ "$REPLY" == "[H" ]]; then echo "home";
-    elif [[ "$REPLY" == "[5" ]]; then echo "pgup";
-    elif [[ "$REPLY" == "[6" ]]; then echo "pgdn";
-    elif [[ "$REPLY" == $'\e[H' ]]; then echo "del";
-    elif [[ "$key" == $'\e' && "${#REPLY}" -eq 0 ]]; then echo "esc"
-    else echo "$key$REPLY"
+      if [[ "$REPLY" == "[A" ]]; then printf "up";
+    elif [[ "$REPLY" == "[B" ]]; then printf "down";
     fi
 
     key=;
-  else echo "$key"
   fi
 }
 
@@ -64,15 +46,6 @@ print_selected () { printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'; }
 lowercase () { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
 sind () {
-  if [[ "${1:-}" == "escape" && "$#" -eq 1 ]]; then
-    echo "Try to escape..."
-    while [[ $(key_input 2> /dev/null) != "esc" ]]; do
-      echo "LoLoLoL"
-    done
-    echo "Good work!"
-    exit
-  fi
-
   local opts
   local selected=0
   local title
@@ -85,11 +58,11 @@ sind () {
       cursor_on
       exit 68
     else
-      printf >&2 "\e[%sB\n" "${#opts[@]:-0}"
+      printf >&2 "\e[%sB\n" "${#opts[@]}"
       hr
       printf >&2 "Cancel\n"
       cursor_on
-      exit $(("$1"))
+      exit "${1:-0}"
     fi
   }
 
@@ -124,11 +97,13 @@ sind () {
           shift
         done
       ;;
+      -v|--version)
+        echo "4.0.0"
+        exit
+      ;;
       *)
-        if [[ -z "${1:-}" ]]; then
-          echo >&2 "Error - Unknown option - $1"
-          cleanup 66
-        fi
+        echo >&2 "Error - Unknown option - $1"
+        cleanup 66
       ;;
     esac
   done
