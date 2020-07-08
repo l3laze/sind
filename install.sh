@@ -27,7 +27,7 @@
     local from
     local tmp
 
-    tmp=$(dirname "$0")"/sind.sh"
+    tmp=$(dirname "$0")/"sind.sh"
 
     while [[ "$#" -gt 0 ]]; do
       case "$1" in
@@ -46,7 +46,7 @@
     done
 
     if [[ "$uselocal" -ne 1 && -e "$tmp" ]]; then
-      echo -e >&2 "Installing from local copy."
+      echo >&2 "Installing from local copy."
       from="local copy"
       cp "$tmp" /usr/local/bin/sind
     elif ! user_has "curl" && ! user_has "wget"; then
@@ -64,10 +64,10 @@
         exit 67
       }
 
-      echo -e "Installing latest \"sind\" from $from @ $version.\n"
+      echo -e >&2 "Installing latest \"sind\" from $from @ $version.\n"
 
       do_download -s -o "/usr/local/bin/sind" "https://raw.githubusercontent.com/l3laze/sind/""$version""/sind.sh" || {
-        echo >&2 "Failed to download sind.sh as sind"
+        echo >&2 "Failed to download sind.sh as /usr/local/bin/sind"
         exit 68
       }
     fi

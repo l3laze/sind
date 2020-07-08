@@ -17,7 +17,7 @@ run () {
   
     total=$((total + 1))
 
-    if [[ "$actual" =~ $expected ]]; then
+    if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
       passed=$((passed + 1))
     else
@@ -33,9 +33,7 @@ run () {
 
   test "Takes an option" "$(./sind.sh -t t -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
-  if [[ "$TRAVIS" != "true" ]]; then
-    test "Handles here-string input" "$(./sind.sh -t t <<< $'\e[B\n' 2>/dev/null)" "No"
-  fi
+  [[ "${TRAVIS:-false}" != "true" ]] && { test "Handles here-string input" "$(./sind.sh -t t <<< $'\e[A\n' 2>/dev/null)" "Cancel"; }
 
 
   # SHOULD FAIL

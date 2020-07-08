@@ -22,9 +22,9 @@ install:
   - cd kcov-master
   - mkdir build
   - cd build
-  - cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov ..
+  - cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
   - make
-  - make install
+  - sudo make install
   - cd ../..
   - rm -rf kcov-master
   - mkdir -p coverage
