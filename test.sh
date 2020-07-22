@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+if type "shellcheck" > /dev/null 2>&1; then
+  echo "shellcheck"
+  shellcheck sind.sh && printf "  ✓ sind.sh\n" || exit 64
+  shellcheck install.sh && printf "  ✓ install.sh\n" || exit 64
+  shellcheck test.sh && printf "  ✓ test.sh\n" || exit 64
+else
+  echo "Need shellcheck installed to run tests."
+fi
+
 run () {
   local timer="$SECONDS"
   local label
@@ -29,9 +38,13 @@ run () {
   echo "sind/sind.sh"
 
   # SHOULD PASS
+  test "Prints usage" "$(./sind.sh -h 2>/dev/null)" "USAGE"
+
   test "Takes a title" "$(./sind.sh -t t <<< $'\n' 2>/dev/null)" "Yes"
 
   test "Takes an option" "$(./sind.sh -t t -o Okay <<< $'\n' 2>/dev/null)" "Okay"
+
+  test "Uses default title" "$(./sind.sh 2>&1 <<< $'\n')" "Choose one"
 
   [[ "${TRAVIS:-false}" != "true" ]] && { test "Handles here-string input" "$(./sind.sh -t t <<< $'\e[A\n' 2>/dev/null)" "Cancel"; }
 
@@ -39,15 +52,11 @@ run () {
   # SHOULD FAIL
   set +e
 
-  test "Fails with no title specified" "$(./sind.sh -o Okay 2>&1)" "Error - No title specified."
+  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option - -x"
 
-  test "Fails with no args" "$(./sind.sh 2>&1)" "Error - Specify a title with -t or --title."
-
-  test "Fails with -t|--title and no args" "$(./sind.sh 2>&1 -t)" "Error - The -t|--title option needs an arg."
+  test "Fails with -t|--title and no arg" "$(./sind.sh 2>&1 -t)" "Error - The -t|--title option needs an arg."
 
   test "Fails with -o|--options and no args" "$(./sind.sh 2>&1 -o)" "Error - The -o|--options option needs at least one arg."
-
-  test "Fails with invalid option" "$(./sind.sh -x 2>&1)" "Error - Unknown option - -x"
 
   set -e
 
@@ -55,18 +64,24 @@ run () {
   echo "sind/install.sh"
 
   # SHOULD PASS
-  test "Installs from GitHub" "$(sudo ./install.sh -t 2>&1)" "Installation from GitHub was successful!"
+  if [[ "${TRAVIS:-false}" != "true" ]]; then
+    test "Installs from GitHub" "$(./install.sh -t 2>&1)" "Installation from GitHub was successful!"
 
-  test "Installs from local copy" "$(sudo ./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
+    test "Installs from local copy" "$(./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
+  else
+    test "Installs from GitHub" "$(sudo ./install.sh -t 2>&1)" "Installation from GitHub was successful!"
+
+    test "Installs from local copy" "$(sudo ./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
+  fi
 
   # SHOULD FAIL
   test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option -x"
 
 
   echo -e "\n$passed/$total passed"
-  timer="$((SECONDS - timer))"
+  timer="$((SECONDS - timer + 1))"
 
-  printf "Finished in < %0.f seconds\n" "$((timer + 1))"
+  printf "Finished in < %0.f seconds\n" "$timer"
 
   if [[ "$passed" -lt "$total" ]]; then
     exit 64

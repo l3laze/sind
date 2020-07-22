@@ -25,18 +25,24 @@
     local uselocal=1
     local testing=1
     local from
+    local to="${HOME}/bin"
+    local type="for current user"
     local tmp
-
-    tmp=$(dirname "$0")/"sind.sh"
 
     while [[ "$#" -gt 0 ]]; do
       case "$1" in
         -l|--local)
           uselocal=0
+          tmp=$(dirname "$0")/"sind.sh"
           shift
         ;;
         -t|--test)
           testing=0
+          shift
+        ;;
+        -s|--system)
+          to="/usr/local/bin"
+          type="globally"
           shift
         ;;
         *)
@@ -45,10 +51,12 @@
       esac
     done
 
+    mkdir -p "${to}"
+
     if [[ "$uselocal" -ne 1 && -e "$tmp" ]]; then
-      echo >&2 "Installing from local copy."
+      echo >&2 "Installing $type from local copy."
       from="local copy"
-      cp "$tmp" /usr/local/bin/sind
+      cp "$tmp" "${to}/sind"
     elif ! user_has "curl" && ! user_has "wget"; then
       echo >&2 "You must have curl or wget to use this install script."
       exit 65
@@ -64,18 +72,23 @@
         exit 67
       }
 
-      echo -e >&2 "Installing latest \"sind\" from $from @ $version.\n"
+      echo -e >&2 "Installing latest \"sind\" from $from @ $version $type."
 
-      do_download -s -o "/usr/local/bin/sind" "https://raw.githubusercontent.com/l3laze/sind/""$version""/sind.sh" || {
-        echo >&2 "Failed to download sind.sh as /usr/local/bin/sind"
+      do_download -s -o "$to/sind" "https://raw.githubusercontent.com/l3laze/sind/""$version""/sind.sh" || {
+        echo >&2 "Failed to download sind.sh as $to/sind"
         exit 68
       }
     fi
 
-    chmod u+x "/usr/local/bin/sind" || {
-      echo >&2 "Failed to chmod /usr/local/bin/sind"
+    chmod u+x "$to/sind" || {
+      echo >&2 "Failed to chmod $to/sind"
       exit 69
     }
+
+    if [[ ! "${HOME}/bin" = *"$PATH"* ]]; then
+       # shellcheck source=/dev/null
+      source "$HOME/.profile" >/dev/null 2>&1
+    fi
 
     if ! command -v sind > /dev/null 2>&1; then
       echo >&2 "Installation failed!"
@@ -84,7 +97,7 @@
       echo "Installation from $from was successful!"
     fi
 
-    if [[ "$testing" -ne 1 ]]; then rm /usr/local/bin/sind; fi
+    if [[ "$testing" -ne 1 ]]; then rm "$to/sind"; fi
   }
 
   install "$@"

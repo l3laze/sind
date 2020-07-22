@@ -9,7 +9,7 @@
   #
   # | Exit Code | Meaning |
   # |    ---    |   ---   |
-  # |     0     |  User selected an option. |
+  # |     0     |  No errors. |
   # |    64     |  Need title arg. |
   # |    65     |  User cancelled with Ctrl +c. |
   # |    66     |  Not enough args for option. |
@@ -29,7 +29,7 @@
     elif [[ "$key" == $' ' ]]; then printf "space";
     elif [[ "$key" == $'\e' ]]; then
       # Try to read 2 more bytes in case it's an escape sequence
-      # 4-byte sequences would require another layer of handling, with the 1 extra byte read
+      # 4-byte sequences would require another layer of handling..
       read -rsN 2 -t 0.01
         if [[ "$REPLY" == "[A" ]]; then printf "up";
       elif [[ "$REPLY" == "[B" ]]; then printf "down";
@@ -45,12 +45,17 @@
   lowercase () { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
   sind () {
+    local version="4.0.0"
     local opts
     local selected=0
     local title
     local has_cancel=1
     local index=0
+    local size=0
+    local usage
+
     opts=()
+    usage="USAGE\n\n$0 -t 'Required title' [options...]"
 
     cleanup () {
       if [[ "${1:-x}" != "x" ]]; then
@@ -64,11 +69,6 @@
         exit "${1:-0}"
       fi
     }
-
-    if [[ "$#" -lt 1 ]]; then
-      echo "Error - Specify a title with -t or --title."
-      cleanup 64
-    fi
 
 
     trap "cleanup" 1 2 3 6
@@ -96,8 +96,16 @@
             shift
           done
         ;;
+        -l|--line)
+          size=1
+          shift
+        ;;
+        -h|--help)
+          echo -e "$usage"
+          exit
+        ;;
         -v|--version)
-          echo "4.0.0"
+          echo "$version"
           exit
         ;;
         *)
@@ -108,8 +116,7 @@
     done
 
     if [[ -z "${title:-}" ]]; then
-      echo >&2 "Error - No title specified."
-      cleanup 67
+      title="Choose one"
     fi
 
     if [[ "${#opts[@]}" -eq 0 ]]; then
@@ -127,22 +134,26 @@
     fi
 
     title=$(echo -e "$title")
-    printf >&2 "%s\n" "$title"
+    [[ "$size" -ne "1" ]] && printf >&2 "%s\n" "$title"
     hr
 
     while true; do
-      for index in $(seq 0 "$((${#opts[@]} - 1))"); do
-        printf >&2 "\n"      
-        if [[ "$index" -eq "$selected" ]]; then
-          print_selected >&2 "${opts[$((index))]}"
-        else
-          printf >&2 "%s" "${opts[$((index))]}"
-        fi
+      if [[ "$size" -eq "1" ]]; then
+        printf "\e[2K\e[1000D"
+        print_selected "${opts[$((selected))]}"
+      else 
+        for index in $(seq 0 "$((${#opts[@]} - 1))"); do
+          printf >&2 "\n"      
+          if [[ "$index" -eq "$selected" ]]; then
+            print_selected >&2 "${opts[$((index))]}"
+          else
+            printf >&2 "%s" "${opts[$((index))]}"
+          fi
+          index="((index + 1))"
+        done
 
-        index="((index + 1))"
-      done
-
-      printf >&2 "\e[%sA" "${#opts[@]}"
+        printf >&2 "\e[%sA" "${#opts[@]}"
+      fi
 
       case $(key_input 2> /dev/null) in
         'up'|'j')
@@ -154,7 +165,10 @@
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
         ;;
         'enter')
-          printf >&2 "\e[%sB\n" "${#opts[@]}"
+          if [[ "$size" -eq "1" ]]; then
+            printf >&2 "\e[%sB\n" "${#opts[@]}"
+          fi
+
           hr
           printf "%s\n" "${opts[$((selected))]}"
           cursor_on
