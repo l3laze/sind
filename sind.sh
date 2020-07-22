@@ -50,6 +50,7 @@
     local selected=0
     local title
     local has_cancel=1
+    local multiple=1
     local index=0
     local size=0
     local usage
@@ -70,6 +71,18 @@
       fi
     }
 
+    function strarray_add () {
+      echo "$1$2,"
+    }
+
+    function strarray_remove () {
+      echo "${1/,$2,/,}"
+    }
+
+    function strarray_length () {
+      local tmp="${1//[^,]}"
+      echo "$((${#tmp} - 1))"
+    }
 
     trap "cleanup" 1 2 3 6
     cursor_off
@@ -163,6 +176,11 @@
         'down'|'k')
           selected=$(("$selected" + 1))
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
+        ;;
+        'space')
+          if [[ "$multiple" = 0 ]]; then
+            
+          fi
         ;;
         'enter')
           if [[ "$size" -eq "1" ]]; then
