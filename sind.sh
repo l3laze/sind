@@ -49,6 +49,7 @@
     local opts
     local selected=0
     local title
+    local choices=","
     local has_cancel=1
     local multiple=1
     local index=0
@@ -69,19 +70,6 @@
         cursor_on
         exit "${1:-0}"
       fi
-    }
-
-    function strarray_add () {
-      echo "$1$2,"
-    }
-
-    function strarray_remove () {
-      echo "${1/,$2,/,}"
-    }
-
-    function strarray_length () {
-      local tmp="${1//[^,]}"
-      echo "$((${#tmp} - 1))"
     }
 
     trap "cleanup" 1 2 3 6
@@ -108,6 +96,10 @@
             opts+=("$1")
             shift
           done
+        ;;
+        -m|--multiple)
+          multiple=0
+          shift
         ;;
         -l|--line)
           size=1
@@ -156,8 +148,14 @@
         print_selected "${opts[$((selected))]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
-          printf >&2 "\n"      
-          if [[ "$index" -eq "$selected" ]]; then
+          printf >&2 "\n"
+          if [[ "$multiple" -eq "0" ]]; then
+            if [[ "$choices" == *",${opts[$index]},"* ]]; then
+              print_selected >&2 "${opts[$((index))]}"
+            else
+              printf >&2 "%s" "${opts[$((index))]}"
+            fi
+          elif [[ "$index" -eq "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
             printf >&2 "%s" "${opts[$((index))]}"
@@ -178,17 +176,28 @@
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
         ;;
         'space')
-          if [[ "$multiple" = 0 ]]; then
-            
+          if [[ "$multiple" -eq 0 ]]; then
+            if [[ "$choices" == *",${opts[$selected]},"* ]]; then
+              choices="${choices/,${opts[$selected]},/,}"
+            else
+              choices="${choices}${opts[selected]},"
+            fi
           fi
         ;;
         'enter')
-          if [[ "$size" -eq "1" ]]; then
-            printf >&2 "\e[%sB\n" "${#opts[@]}"
+          printf >&2 "\e[%sB\n" "${#opts[@]}"
+          hr
+
+          if [[ "$multiple" -eq "1" ]]; then
+            printf "%s\n" "${opts[$((selected))]}"
+          else
+            echo "$choices"
+
+            IFS=, read -ar choices <<< "$choices"
+            echo "choices=(${tmp[*]})"
+
           fi
 
-          hr
-          printf "%s\n" "${opts[$((selected))]}"
           cursor_on
           exit
         ;;
