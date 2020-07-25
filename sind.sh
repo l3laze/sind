@@ -10,18 +10,13 @@
   # | Exit Code | Meaning |
   # |    ---    |   ---   |
   # |     0     |  No errors. |
-  # |    64     |  Need title arg. |
-  # |    65     |  User cancelled with Ctrl +c. |
-  # |    66     |  Not enough args for option. |
-  # |    67     |  Unknown option. |
-  # |    68     |  No title specified. |
+  # |    64     |  Unknown option. |
+  # |    65     |  Not enough args for option. |
   # |    ---    |  --- |
 
   key_input () {
-    local IFS=;
     local key
-
-    read -rsN 1
+    IFS=; read -rsN 1
     key="$REPLY"
 
       if [[ "$key" =~ ^[A-Za-z0-9]$ ]]; then printf "%s" "$key";
@@ -30,14 +25,13 @@
     elif [[ "$key" == $'\e' ]]; then
       # Try to read 2 more bytes in case it's an escape sequence
       # 4-byte sequences would require another layer of handling..
-      read -rsN 2 -t 0.01
+      IFS=; read -rsN 2 -t 0.01
         if [[ "$REPLY" == "[A" ]]; then printf "up";
       elif [[ "$REPLY" == "[B" ]]; then printf "down";
       fi
       key=;
     fi
   }
-
   cursor_on ()  { printf >&2 "\e[?25h"; }
   cursor_off () { printf >&2 "\e[?25l"; }
   hr () { printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' - >&2; }
@@ -45,7 +39,7 @@
   lowercase () { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
   sind () {
-    local version="4.0.0"
+    local version="5.0.0b"
     local opts
     local selected=0
     local title
@@ -62,7 +56,7 @@
     cleanup () {
       if [[ "${1:-x}" != "x" ]]; then
         cursor_on
-        exit 68
+        exit 66
       else
         printf >&2 "\e[%sB\n" "${#opts[@]}"
         hr
@@ -115,7 +109,7 @@
         ;;
         *)
           echo >&2 "Error - Unknown option - $1"
-          cleanup 66
+          cleanup 64
         ;;
       esac
     done
@@ -129,7 +123,7 @@
     fi
 
     for o in "${opts[@]}"; do
-      if [[ $(lowercase "$o") == "cancel" ]]; then
+      if [[ "${o,,}" == "cancel" ]]; then
         has_cancel=0
       fi
     done
@@ -149,13 +143,7 @@
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
           printf >&2 "\n"
-          if [[ "$multiple" -eq "0" ]]; then
-            if [[ "$choices" == *",${opts[$index]},"* ]]; then
-              print_selected >&2 "${opts[$((index))]}"
-            else
-              printf >&2 "%s" "${opts[$((index))]}"
-            fi
-          elif [[ "$index" -eq "$selected" ]]; then
+          if [[ "$multiple" -eq "0" && "$choices" == *",${opts[$index]},"* || "$index" == "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
             printf >&2 "%s" "${opts[$((index))]}"
@@ -191,11 +179,13 @@
           if [[ "$multiple" -eq "1" ]]; then
             printf "%s\n" "${opts[$((selected))]}"
           else
-            echo "$choices"
-
-            IFS=, read -ar choices <<< "$choices"
-            echo "choices=(${tmp[*]})"
-
+            IFS=',' read -ra choices <<< "${choices#,}"
+            if [[ "${choices:-x}" != "x" && "${#choices}" -lt 1 ]]; then
+              read -r -n 1 -p "You must pick at least one option (press any key to continue)."
+            else
+              printf "'%s' " "${choices[@]}"
+              printf "\n"
+            fi
           fi
 
           cursor_on
