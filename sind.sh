@@ -3,6 +3,8 @@
 {
   set -euo pipefail
 
+  export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
   #
   # Follows the suggested exit code range of 0 & 64-113
   # from http://www.tldp.org/LDP/abs/html/exitcodes.html
@@ -34,9 +36,8 @@
   }
   cursor_on ()  { printf >&2 "\e[?25h"; }
   cursor_off () { printf >&2 "\e[?25l"; }
-  hr () { printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' - >&2; }
+  hr () { printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''; printf "%s" "${horule// /-}"; }
   print_selected () { printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'; }
-  lowercase () { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
   sind () {
     local version="5.0.0b"
@@ -44,6 +45,7 @@
     local selected=0
     local title
     local choices=","
+    local no_cancel=1
     local has_cancel=1
     local multiple=1
     local index=0
@@ -54,19 +56,14 @@
     usage="USAGE\n\n$0 -t 'Required title' [options...]"
 
     cleanup () {
-      if [[ "${1:-x}" != "x" ]]; then
-        cursor_on
-        exit 66
-      else
-        printf >&2 "\e[%sB\n" "${#opts[@]}"
-        hr
-        printf >&2 "Cancel\n"
-        cursor_on
-        exit "${1:-0}"
-      fi
+      printf >&2 "\e[%sB\n" "${#opts[@]}"
+      hr
+      printf >&2 "Cancel\n"
+      cursor_on
+      exit "${1:-0}"
     }
 
-    trap "cleanup" 1 2 3 6
+    trap "cleanup" HUP INT QUIT ABRT
     cursor_off
 
     while [[ "$#" -gt 0 ]]; do
@@ -101,11 +98,11 @@
         ;;
         -h|--help)
           echo -e "$usage"
-          exit
+          cleanup
         ;;
         -v|--version)
           echo "$version"
-          exit
+          cleanup
         ;;
         *)
           echo >&2 "Error - Unknown option - $1"
@@ -122,28 +119,37 @@
       opts=(Yes No)
     fi
 
-    for o in "${opts[@]}"; do
-      if [[ "${o,,}" == "cancel" ]]; then
-        has_cancel=0
-      fi
-    done
+    if [[ "$no_cancel" -eq 1 ]]; then
+      for o in "${opts[@]}"; do
+        if [[ "${o,,}" == "cancel" ]]; then
+          has_cancel=0
+        fi
+      done
 
-    if [[ "$has_cancel" -eq 1 ]]; then
-      opts+=(Cancel)
+      if [[ "$has_cancel" -eq 1 ]]; then
+        opts+=(Cancel)
+      fi
     fi
 
-    title=$(echo -e "$title")
-    [[ "$size" -ne "1" ]] && printf >&2 "%s\n" "$title"
+    if [[ "$multiple" -eq 1 ]]; then
+      title="${title} (up|j, down|k, enter: choose)"
+    else
+      title="${title} (up|j, down|k, space: de/select, enter: done)"
+    fi
+
+    printf -v title "%s" "$title"
+
+    printf >&2 "%s\n" "$title"
     hr
 
     while true; do
       if [[ "$size" -eq "1" ]]; then
-        printf "\e[2K\e[1000D"
-        print_selected "${opts[$((selected))]}"
+        printf "\e[1000D\e[2K"
+        print_selected "${opts[$selected]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
           printf >&2 "\n"
-          if [[ "$multiple" -eq "0" && "$choices" == *",${opts[$index]},"* || "$index" == "$selected" ]]; then
+          if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) || "$index" == "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
             printf >&2 "%s" "${opts[$((index))]}"
@@ -156,7 +162,7 @@
 
       case $(key_input 2> /dev/null) in
         'up'|'j')
-          selected=$(("$selected" - 1))
+          selected=$((selected - 1))
           if [ "$selected" -lt 0 ]; then selected=$(("${#opts[@]}" - 1)); fi
         ;;
         'down'|'k')
@@ -176,15 +182,18 @@
           printf >&2 "\e[%sB\n" "${#opts[@]}"
           hr
 
-          if [[ "$multiple" -eq "1" ]]; then
-            printf "%s\n" "${opts[$((selected))]}"
+          if [[ "$multiple" -ne 0 ]]; then
+            printf "%s\n" "${opts[$selected]}"
           else
-            IFS=',' read -ra choices <<< "${choices#,}"
-            if [[ "${choices:-x}" != "x" && "${#choices}" -lt 1 ]]; then
-              read -r -n 1 -p "You must pick at least one option (press any key to continue)."
+            IFS=',' read -ra choice_array <<< "${choices#,}"
+
+            if [[ "${#choice_array[@]}" -eq 0 ]]; then
+              read -rsn 1 -p "Make a choice (press any key to continue)"
+              printf "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
+              choices=","
+              continue
             else
-              printf "'%s' " "${choices[@]}"
-              printf "\n"
+              printf "%s\n" "${choice_array[@]}"
             fi
           fi
 
