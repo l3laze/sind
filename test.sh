@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-if type "shellcheck" > /dev/null 2>&1; then
+if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
   shellcheck sind.sh && printf "  ✓ sind.sh\n" || exit 64
   shellcheck install.sh && printf "  ✓ install.sh\n" || exit 64
   shellcheck test.sh && printf "  ✓ test.sh\n" || exit 64
 else
-  echo "Need shellcheck installed to run tests."
+  echo "Need shellcheck installed for linting."
 fi
 
 run () {
