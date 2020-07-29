@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-if type "shellcheck" > /dev/null 2>&1; then
+if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
   shellcheck sind.sh && printf "  ✓ sind.sh\n" || exit 64
   shellcheck install.sh && printf "  ✓ install.sh\n" || exit 64
   shellcheck test.sh && printf "  ✓ test.sh\n" || exit 64
 else
-  echo "Need shellcheck installed to run tests."
+  echo "Need shellcheck installed for linting."
 fi
 
 run () {
-  local timer="$SECONDS"
+  local timer="$(date +%s%3N)"
   local label
   local actual
   local expected
@@ -79,9 +79,10 @@ run () {
 
 
   echo -e "\n$passed/$total passed"
-  timer="$((SECONDS - timer + 1))"
 
-  printf "Finished in < %0.f seconds\n" "$timer"
+  timer="$(($(date +%s%3N) - $timer))"
+
+  printf "Finished in %s.%s seconds\n" "$((timer / 1000))" "$((timer % 1000))"
 
   if [[ "$passed" -lt "$total" ]]; then
     exit 64
