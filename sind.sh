@@ -3,8 +3,6 @@
 {
   set -euo pipefail
 
-  export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-
   #
   # Follows the suggested exit code range of 0 & 64-113
   # from http://www.tldp.org/LDP/abs/html/exitcodes.html
@@ -36,7 +34,7 @@
   }
   cursor_on ()  { printf >&2 "\e[?25h"; }
   cursor_off () { printf >&2 "\e[?25l"; }
-  hr () { printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''; printf "%s" "${horule// /-}"; }
+  hr () { printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''; printf >&2 "%s" "${horule// /-}"; }
   print_selected () { printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'; }
 
   sind () {
@@ -105,7 +103,7 @@
           cleanup
         ;;
         *)
-          echo >&2 "Error - Unknown option - $1"
+          echo >&2 "Error - Unknown option: $1"
           cleanup 64
         ;;
       esac
@@ -144,7 +142,7 @@
 
     while true; do
       if [[ "$size" -eq "1" ]]; then
-        printf "\e[1000D\e[2K"
+        printf >&2 "\e[1000D\e[2K"
         print_selected "${opts[$selected]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
@@ -188,12 +186,13 @@
             IFS=',' read -ra choice_array <<< "${choices#,}"
 
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
-              read -rsn 1 -p "Make a choice (press any key to continue)"
-              printf "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
+              read -rsn 1 -p "Make a choice (press any key to continue)" >&2
+              printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
               choices=","
               continue
             else
-              printf "%s\n" "${choice_array[@]}"
+              printf "'%s' " "${choice_array[@]}"
+              printf "\n"
             fi
           fi
 

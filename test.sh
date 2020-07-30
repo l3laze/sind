@@ -10,12 +10,14 @@ else
 fi
 
 run () {
-  local timer="$(date +%s%3N)"
+  local timer
   local label
   local actual
   local expected
   local passed=0
   local total=0
+
+  timer="$(date +%s%3N)"
 
   test () {
     label="$1"
@@ -23,14 +25,14 @@ run () {
     actual="${actual//\[\?25l/}"
     actual="${actual//\[\?25h/}"
     expected="$3"
-  
+
     total=$((total + 1))
 
     if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
-      passed=$((passed + 1))
+      ((passed++))
     else
-      printf "  × %s\n'%s' != '%s'\n" "$label" "$expected" "$actual"
+      printf "  × %s\n%s != %s\n" "$label" "$actual" "$expected"
     fi
   }
 
@@ -40,23 +42,29 @@ run () {
   # SHOULD PASS
   test "Prints usage" "$(./sind.sh -h 2>/dev/null)" "USAGE"
 
-  test "Takes a title" "$(./sind.sh -t t <<< $'\n' 2>/dev/null)" "Yes"
+  test "Takes a title" "$(./sind.sh -t "title goes here" <<< $'\n' 2>&1)" "title goes here"
 
-  test "Takes an option" "$(./sind.sh -t t -o Okay <<< $'\n' 2>/dev/null)" "Okay"
+  test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
   test "Uses default title" "$(./sind.sh 2>&1 <<< $'\n')" "Choose one"
 
-  [[ "${TRAVIS:-false}" != "true" ]] && { test "Handles here-string input" "$(./sind.sh -t t <<< $'\e[A\n' 2>/dev/null)" "Cancel"; }
+  if [[ "${TRAVIS:-false}" != "true" ]]; then
+    test "Handles here-string input" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+
+    test "Multiple choice" "$(./sind.sh -m 2>/dev/null <<< $' \e[B ')" $'\'Yes\' \'No\''
+
+    test "Press any key to continue" "$(./sind.sh -m 2>&1 <<< $'\n \e[B \n')" "No"
+  fi
 
 
   # SHOULD FAIL
   set +e
 
-  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option - -x"
+  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option: -x"
 
-  test "Fails with -t|--title and no arg" "$(./sind.sh 2>&1 -t)" "Error - The -t|--title option needs an arg."
+  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error - The -t|--title option needs an arg."
 
-  test "Fails with -o|--options and no args" "$(./sind.sh 2>&1 -o)" "Error - The -o|--options option needs at least one arg."
+  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error - The -o|--options option needs at least one arg."
 
   set -e
 
@@ -75,12 +83,12 @@ run () {
   fi
 
   # SHOULD FAIL
-  test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option -x"
+  test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option: -x"
 
 
   echo -e "\n$passed/$total passed"
 
-  timer="$(($(date +%s%3N) - $timer))"
+  timer="$(($(date +%s%3N) - timer))"
 
   printf "Finished in %s.%s seconds\n" "$((timer / 1000))" "$((timer % 1000))"
 

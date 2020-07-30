@@ -38,7 +38,7 @@ script:
   - shellcheck sind.sh
   - shellcheck test.sh
   - shellcheck install.sh
-  - kcov coverage test.sh
+  - kcov --include-path=test.sh,install.sh,sind.sh coverage test.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

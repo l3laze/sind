@@ -33,6 +33,7 @@
       case "$1" in
         -l|--local)
           uselocal=0
+          printf >&2 "%s/sind.sh" "${0%/*}"
           tmp=$(dirname "$0")/"sind.sh"
           shift
         ;;
@@ -46,7 +47,7 @@
           shift
         ;;
         *)
-          echo >&2 "Error - unknown option $1"
+          echo >&2 "Error - unknown option: $1"
           exit 64
       esac
     done
