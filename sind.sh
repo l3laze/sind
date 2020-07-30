@@ -94,6 +94,10 @@
           size=1
           shift
         ;;
+        -n|--no-cancel)
+          no_cancel=0
+          shift
+        ;;
         -h|--help)
           echo -e "$usage"
           cleanup
