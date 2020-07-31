@@ -21,11 +21,11 @@ run () {
 
   test () {
     label="$1"
-    actual=$(tr -dc '[:print:]' <<< "$2")
+    actual=$(tr -dc '[:print:]' <<< "${2//$'\n'/,|,}")
     actual="${actual//\[\?25l/}"
     actual="${actual//\[\?25h/}"
+    actual="${actual//,|,/$'\n'}"
     expected="$3"
-
     total=$((total + 1))
 
     if [[ "$actual" == *"$expected"* ]]; then
@@ -36,11 +36,10 @@ run () {
     fi
   }
 
-
   echo "sind/sind.sh"
 
   # SHOULD PASS
-  test "Prints usage" "$(./sind.sh -h 2>/dev/null)" "USAGE"
+  test "Prints usage" "$(./sind.sh -h 2>/dev/null)" "Usage"
 
   test "Prints version" "$(./sind.sh -v 2>/dev/null)" "5.0.0b"
 
@@ -54,7 +53,7 @@ run () {
   if [[ "${TRAVIS:-false}" != "true" ]]; then
     test "Handles here-string input" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
-    test "Multiple choice" "$(./sind.sh -m 2>/dev/null <<< $' \e[B ')" $'\'Yes\' \'No\''
+    test "Multiple choice" "$(./sind.sh -m 2>/dev/null <<< $' \e[B ')" $'Yes\nNo'
 
     test "Press any key to continue" "$(./sind.sh -m 2>&1 <<< $'\n \e[B \n')" "No"
 
@@ -81,7 +80,6 @@ run () {
 
   set -e
 
-
   echo "sind/install.sh"
 
   # SHOULD PASS
@@ -103,7 +101,6 @@ run () {
 
   # SHOULD FAIL
   test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option: -x"
-
 
   echo -e "\n$passed/$total passed"
 

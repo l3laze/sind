@@ -23,8 +23,6 @@
     elif [[ "$key" == $'\n' ]]; then printf "enter";
     elif [[ "$key" == $' ' ]]; then printf "space";
     elif [[ "$key" == $'\e' ]]; then
-      # Try to read 2 more bytes in case it's an escape sequence
-      # 4-byte sequences would require another layer of handling..
       IFS=; read -rsN 2 -t 0.01
         if [[ "$REPLY" == "[A" ]]; then printf "up";
       elif [[ "$REPLY" == "[B" ]]; then printf "down";
@@ -38,7 +36,6 @@
   print_selected () { printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'; }
 
   sind () {
-    local version="5.0.0b"
     local opts
     local selected=0
     local title
@@ -49,9 +46,17 @@
     local index=0
     local size=0
     local usage
+    local version
+    local name="${0#\.\/}"
 
     opts=()
-    usage="USAGE\n\n$0 -t 'Required title' [options...]"
+    version="$(cat VERSION)"
+    name="${name%.sh}"
+
+    usage="$name v$version\n\n\
+sind is a Simple INput Dialog for Bash 4+ with reasonable default options, features single and multiple choice, can display on a single line, 
+Usage\n\n$0 [options...]\n\
+Where options are:"
 
     cleanup () {
       printf >&2 "\e[%sB\n" "${#opts[@]}"
@@ -99,12 +104,14 @@
           shift
         ;;
         -h|--help)
-          echo -e "$usage"
-          cleanup
+          echo -e "$usage\n"
+          cursor_on
+          exit
         ;;
         -v|--version)
-          echo "$version"
-          cleanup
+          cat VERSION && printf "\n"
+          cursor_on
+          exit
         ;;
         *)
           echo >&2 "Error - Unknown option: $1"
@@ -181,7 +188,11 @@
           fi
         ;;
         'enter')
-          printf >&2 "\e[%sB\n" "${#opts[@]}"
+          if [[ "$size" -eq 0 ]]; then
+            printf >&2 "\e[%sB\n" "${#opts[@]}"
+          else
+            printf "\n"
+          fi
           hr
 
           if [[ "$multiple" -ne 0 ]]; then
@@ -191,12 +202,16 @@
 
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
               read -rsn 1 -p "Make a choice (press any key to continue)" >&2
-              printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
+              if [[ "$size" -eq 0 ]]; then
+                printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
+              else
+                printf >&2 "\e[1000D\e[2A\e[J"
+              fi
               choices=","
               continue
             else
-              printf "'%s' " "${choice_array[@]}"
-              printf "\n"
+              printf "%s\n" "${choice_array[@]}"
+              # printf "\n"
             fi
           fi
 
