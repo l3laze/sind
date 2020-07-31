@@ -21,12 +21,12 @@ run () {
 
   test () {
     label="$1"
-    actual=$(tr -dc '[:print:]' <<< "${2//$'\n'/,|,}")
-    actual="${actual//\[\?25l/}"
-    actual="${actual//\[\?25h/}"
-    actual="${actual//,|,/$'\n'}"
+    actual="${2//(\x1b[[a-Z0-9;]+)/}"
     expected="$3"
     total=$((total + 1))
+
+    # debugging
+    #echo "$actual"
 
     if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
@@ -43,11 +43,11 @@ run () {
 
   test "Prints version" "$(./sind.sh -v 2>/dev/null)" "5.0.0b"
 
+  test "Uses default title" "$(./sind.sh 2>&1 <<< $'\n')" "Choose one"
+
   test "Takes a title" "$(./sind.sh -t "title goes here" <<< $'\n' 2>&1)" "title goes here"
 
   test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
-
-  test "Uses default title" "$(./sind.sh 2>&1 <<< $'\n')" "Choose one"
 
   # LCOV_EXCL_START
   if [[ "${TRAVIS:-false}" != "true" ]]; then
@@ -61,9 +61,11 @@ run () {
 
     test "Line mode" "$(./sind.sh -l 2>/dev/null <<< $'\e[B\n')" "No"
 
+    test "Line mode + multiple choice" "$(./sind.sh -l -m 2>/dev/null <<< $' \e[B \n')" $'Yes\nNo'
+
     test "Adds cancel if not provided" "$(./sind.sh 2>/dev/null <<< $'\e[A\n')" "Cancel"
 
-    test "Doesn't add cancel if provided" "$(./sind.sh -o cancel 2>&1 <<< $'\e[A\n')" "cancel"
+    test "Doesn't add cancel if provided" "$(./sind.sh -o okay cancel 2>&1 <<< $'\e[A\n')" "cancel"
 
     test "Doesn't require cancel" "$(./sind.sh -n 2>/dev/null <<< $'\e[A\n')" "No"
   fi

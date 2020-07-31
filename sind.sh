@@ -30,10 +30,23 @@
       key=;
     fi
   }
-  cursor_on ()  { printf >&2 "\e[?25h"; }
-  cursor_off () { printf >&2 "\e[?25l"; }
-  hr () { printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''; printf >&2 "%s" "${horule// /-}"; }
-  print_selected () { printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'; }
+
+  cursor_on ()  {
+    printf >&2 "\e[?25h"
+  }
+
+  cursor_off () {
+    printf >&2 "\e[?25l"
+  }
+
+  hr () {
+    printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''
+    printf >&2 "%s" "${horule// /-}"
+  }
+
+  print_selected () {
+    printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'
+  }
 
   sind () {
     local opts
@@ -53,10 +66,7 @@
     version="$(cat VERSION)"
     name="${name%.sh}"
 
-    usage="$name v$version\n\n\
-sind is a Simple INput Dialog for Bash 4+ with reasonable default options, features single and multiple choice, can display on a single line, 
-Usage\n\n$0 [options...]\n\
-Where options are:"
+    usage="$name v$version\n\nsind is a Simple INput Dialog for Bash 4+ with reasonable default options. It features single and multiple choice, and can display on a single line.\nUsage\n\n$0 [options...]\nWhere options are:"
 
     cleanup () {
       printf >&2 "\e[%sB\n" "${#opts[@]}"
@@ -141,14 +151,11 @@ Where options are:"
     fi
 
     if [[ "$multiple" -eq 1 ]]; then
-      title="${title} (up|j, down|k, enter: choose)"
+      printf >&2 "%s\n(up|j, down|k, enter: choose)\n" "$title"
     else
-      title="${title} (up|j, down|k, space: de/select, enter: done)"
+      printf >&2 "%s\n(up|j, down|k, space: de/select, enter: done)\n" "$title"
     fi
 
-    printf -v title "%s" "$title"
-
-    printf >&2 "%s\n" "$title"
     hr
 
     while true; do
@@ -193,6 +200,7 @@ Where options are:"
           else
             printf "\n"
           fi
+
           hr
 
           if [[ "$multiple" -ne 0 ]]; then
@@ -201,17 +209,18 @@ Where options are:"
             IFS=',' read -ra choice_array <<< "${choices#,}"
 
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
-              read -rsn 1 -p "Make a choice (press any key to continue)" >&2
+              >&2 read -rsn 1 -p "Make a choice (press any key to continue)"
+
               if [[ "$size" -eq 0 ]]; then
                 printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
               else
-                printf >&2 "\e[1000D\e[2A\e[J"
+                printf >&2 "\e[1000D\e[2A\e[J" # LCOV_EXCL_LINE
               fi
+
               choices=","
               continue
             else
               printf "%s\n" "${choice_array[@]}"
-              # printf "\n"
             fi
           fi
 
