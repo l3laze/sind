@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#./sind.sh <<< $'\e[A\n' 2>/dev/null
-
 if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
   shellcheck sind.sh && printf "  ✓ sind.sh\n" || exit 64
@@ -49,6 +47,7 @@ run () {
 
   test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
+  if [[ "${TRAVIS:-false}" != "true" ]]; then
     test "Handles here-string input ×" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
     test "Multiple choice ×" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
@@ -66,6 +65,7 @@ run () {
     test "Doesn't add cancel if provided ×" "$(./sind.sh -o okay cancel <<< $'\e[A\n' 2>/dev/null)" "cancel"
 
     test "Doesn't require cancel ×" "$(./sind.sh -n <<< $'\e[A\n' 2>/dev/null)" "No"
+  fi
 
   # SHOULD FAIL
   set +e

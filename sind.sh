@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-
 {
-  #set -euo pipefail
-
   #
   # Follows the suggested exit code range of 0 & 64-113
   # from http://www.tldp.org/LDP/abs/html/exitcodes.html
@@ -13,12 +10,11 @@
   # |    64     |  Unknown option. |
   # |    65     |  Not enough args for option. |
   # |    ---    |  --- |
-
+  #
   key_input () {
     local key
     IFS=; read -rsN 1
     key="$REPLY"
-
       if [[ "$key" =~ ^[A-Za-z0-9]$ ]]; then printf "%s" "$key";
     elif [[ "$key" == $'\n' ]]; then printf "enter";
     elif [[ "$key" == $' ' ]]; then printf "space";
@@ -31,7 +27,7 @@
     fi
   }
 
-  cursor_on ()  {
+  cursor_on () {
     printf >&2 "\e[?25h"
   }
 
@@ -61,11 +57,9 @@
     local usage
     local version
     local name="${0#\.\/}"
-
     opts=()
     version="$(cat VERSION)"
     name="${name%.sh}"
-
     usage="$name v$version\n\nsind is a Simple INput Dialog for Bash 4+ with reasonable default options. It features single and multiple choice, and can display on a single line.\nUsage\n\n$0 [options...]\nWhere options are:"
 
     cleanup () {
@@ -78,7 +72,6 @@
 
     trap "cleanup" HUP INT QUIT ABRT
     cursor_off
-
     while [[ "$#" -gt 0 ]]; do
       case "${1:-}" in
         -t|--title)
@@ -129,35 +122,32 @@
         ;;
       esac
     done
-
     if [[ -z "${title:-}" ]]; then
-      title="Choose one"
+      if [[ "$multiple" -eq 1 ]]; then
+        title="Choose one"
+      else
+        title="Choose some"
+      fi
     fi
-
     if [[ "${#opts[@]}" -eq 0 ]]; then
       opts=(Yes No)
     fi
-
     if [[ "$no_cancel" -eq 1 ]]; then
       for o in "${opts[@]}"; do
         if [[ "${o,,}" == "cancel" ]]; then
           has_cancel=0
         fi
       done
-
       if [[ "$has_cancel" -eq 1 ]]; then
         opts+=(Cancel)
       fi
     fi
-
     if [[ "$multiple" -eq 1 ]]; then
       printf >&2 "%s\n(up|j, down|k, enter: choose)\n" "$title"
     else
       printf >&2 "%s\n(up|j, down|k, space: de/select, enter: done)\n" "$title"
     fi
-
     hr
-
     while true; do
       if [[ "$size" -eq "1" ]]; then
         printf >&2 "\e[1000D\e[2K"
@@ -175,7 +165,6 @@
 
         printf >&2 "\e[%sA" "${#opts[@]}"
       fi
-
       case $(key_input 2>/dev/null) in
         'up'|'j')
           selected=$((selected - 1))
@@ -200,14 +189,11 @@
           else
             printf >&2 "\n"
           fi
-
           hr
-
           if [[ "$multiple" -ne 0 ]]; then
             printf "%s\n" "${opts[$selected]}"
           else
             IFS=',' read -ra choice_array <<< "${choices#,}"
-
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
               >&2 read -rsn 1 -p "Make a choice (press any key to continue)"
 
@@ -216,14 +202,12 @@
               else
                 printf >&2 "\e[1000D\e[2A\e[J" # LCOV_EXCL_LINE
               fi
-
               choices=","
               continue
             else
               printf "%s\n" "${choice_array[@]}"
             fi
           fi
-
           cursor_on
           exit
         ;;
