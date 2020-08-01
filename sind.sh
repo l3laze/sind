@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 {
-  set -euo pipefail
+  #set -euo pipefail
 
   #
   # Follows the suggested exit code range of 0 & 64-113
@@ -114,12 +114,12 @@
           shift
         ;;
         -h|--help)
-          echo -e "$usage\n"
+          echo -e >&2 "$usage\n"
           cursor_on
           exit
         ;;
         -v|--version)
-          cat VERSION && printf "\n"
+          cat VERSION >&2 && printf >&2 "\n"
           cursor_on
           exit
         ;;
@@ -161,7 +161,7 @@
     while true; do
       if [[ "$size" -eq "1" ]]; then
         printf >&2 "\e[1000D\e[2K"
-        print_selected "${opts[$selected]}"
+        print_selected >&2 "${opts[$selected]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
           printf >&2 "\n"
@@ -176,13 +176,13 @@
         printf >&2 "\e[%sA" "${#opts[@]}"
       fi
 
-      case $(key_input 2> /dev/null) in
+      case $(key_input 2>/dev/null) in
         'up'|'j')
           selected=$((selected - 1))
           if [ "$selected" -lt 0 ]; then selected=$(("${#opts[@]}" - 1)); fi
         ;;
         'down'|'k')
-          selected=$(("$selected" + 1))
+          selected=$((selected + 1))
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
         ;;
         'space')
@@ -198,7 +198,7 @@
           if [[ "$size" -eq 0 ]]; then
             printf >&2 "\e[%sB\n" "${#opts[@]}"
           else
-            printf "\n"
+            printf >&2 "\n"
           fi
 
           hr

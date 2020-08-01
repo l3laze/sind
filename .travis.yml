@@ -36,8 +36,9 @@ before_script:
 
 script:
   - shellcheck sind.sh
-  - shellcheck test.sh
   - shellcheck install.sh
+  - shellcheck test.sh
+  - ./test.sh || exit 64
   - kcov --include-path=test.sh,install.sh,sind.sh coverage test.sh 2>/dev/null
 
 after_success:
