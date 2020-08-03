@@ -6,7 +6,7 @@ if command -v "shellcheck" > /dev/null 2>&1; then
   shellcheck install.sh && printf "  ✓ install.sh\n" || exit 64
   shellcheck test.sh && printf "  ✓ test.sh\n" || exit 64
 else
-  echo "Need shellcheck installed for linting." # LCOV_EXCL_LINE
+  echo >&2 "Need shellcheck installed for linting." # LCOV_EXCL_LINE
 fi
 
 run () {
@@ -23,16 +23,43 @@ run () {
     label="$1"
     actual="$2" #{2//(\x1b[[a-Z0-9;]+)/}"
     expected="$3"
-    total=$((total + 1))
+    ((total++))
 
     if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
-      # [[ "$label" == *"×"* ]] && printf "      %s==%s\n" "$expected" "$actual"
       ((passed++))
     else
       printf "  × %s\n%s != %s\n" "$label" "$expected" "$actual" # LCOV_EXCL_LINE
     fi
   }
+
+  echo "install.sh"
+
+  # SHOULD PASS
+  # LCOV_EXCL_START
+  if [[ "${TRAVIS:-false}" != "true" ]]; then
+    test "Installs local copy automatically" "$(./install.sh -l -s -t 2>&1)" "Success."
+
+    test "Installs latest release automatically from GitHub" "$(\
+mkdir -p "${HOME}"/tmp-sind && \
+cp install.sh "${HOME}"/tmp-sind/install.sh && \
+cd "${HOME}"/tmp-sind && \
+"${HOME}"/tmp-sind/install.sh 2>&1 && \
+rm -rf "${HOME}"/tmp-sind\
+)" "Success."
+    # LCOV_EXCL_END
+  else
+    test "Installs local copy automatically" "$(sudo ./install.sh 2>&1)" "Success."
+
+    test "Installs latest release automatically from GitHub" "$(mkdir -p "${HOME}"/tmp-sind && \
+cp install.sh "${HOME}"/tmp-sind/install.sh && \
+cd "${HOME}"/tmp-sind && \
+sudo "${HOME}"/tmp-sind/install.sh 2>&1 && \
+rm -rf "${HOME}"/tmp-sind\
+)" "Success."
+  fi
+
+  wait
 
   echo "sind.sh"
 
@@ -48,23 +75,23 @@ run () {
   test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
   if [[ "${TRAVIS:-false}" != "true" ]]; then
-    test "Handles here-string input ×" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+    test "Handles here-string input" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
-    test "Multiple choice ×" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
+    test "Multiple choice" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
 
-    test "Press any key to continue ×" "$(./sind.sh -m <<< $'\n \e[B \n' 2>/dev/null)" "No"
+    test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[B \n' 2>/dev/null)" "No"
 
-    test "Removes de-selected choices ×" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
+    test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
 
-    test "Line mode ×" "$(./sind.sh -l <<< $'\e[B\n' 2>/dev/null)" "No"
+    test "Line mode" "$(./sind.sh -l <<< $'\e[B\n' 2>/dev/null)" "No"
 
-    test "Combo line mode + multiple choice ×" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
+    test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
-    test "Adds cancel if not provided ×" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+    test "Adds cancel if not provided" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
-    test "Doesn't add cancel if provided ×" "$(./sind.sh -o okay cancel <<< $'\e[A\n' 2>/dev/null)" "cancel"
+    test "Doesn't add cancel if provided" "$(./sind.sh -o okay cancel <<< $'\e[A\n' 2>/dev/null)" "cancel"
 
-    test "Doesn't require cancel ×" "$(./sind.sh -n <<< $'\e[A\n' 2>/dev/null)" "No"
+    test "Doesn't require cancel" "$(./sind.sh -n <<< $'\e[A\n' 2>/dev/null)" "No"
   fi
 
   # SHOULD FAIL
@@ -77,28 +104,6 @@ run () {
   test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error - The -o|--options option needs at least one arg."
 
   set -e
-
-  echo "install.sh"
-
-  # SHOULD PASS
-  # LCOV_EXCL_START
-  if [[ "${TRAVIS:-false}" != "true" ]]; then
-    test "Installs locally from GitHub" "$(./install.sh -t 2>&1)" "Installation from GitHub was successful!"
-
-    test "Installs locally from local copy" "$(./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
-
-    test "Installs globally from local copy" "$(./install.sh -l -s -t 2>&1)" "Installation from local copy was successful!"
-    # LCOV_EXCL_END
-  else
-    test "Installs locally from GitHub" "$(sudo ./install.sh -t 2>&1)" "Installation from GitHub was successful!"
-
-    test "Installs locally from local copy" "$(sudo ./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
-
-    test "Installs globally from local copy" "$(sudo ./install.sh -l -s -t 2>&1)" "Installation from local copy was successful!"
-  fi
-
-  # SHOULD FAIL
-  test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option: -x"
 
   echo -e "\n$passed/$total passed"
 
