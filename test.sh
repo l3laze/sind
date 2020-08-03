@@ -36,37 +36,18 @@ run () {
   echo "install.sh"
 
   # SHOULD PASS
-  # LCOV_EXCL_START
   if [[ "${TRAVIS:-false}" != "true" ]]; then
-    test "Installs local copy automatically" "$(./install.sh -l -s -t 2>&1)" "Success."
-
-    test "Installs latest release automatically from GitHub" "$(\
-mkdir -p "${HOME}"/tmp-sind && \
-cp install.sh "${HOME}"/tmp-sind/install.sh && \
-cd "${HOME}"/tmp-sind && \
-"${HOME}"/tmp-sind/install.sh 2>&1 && \
-rm -rf "${HOME}"/tmp-sind\
-)" "Success."
-    # LCOV_EXCL_END
+    test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success" # LCOV_EXCL_LINE
   else
-    test "Installs local copy automatically" "$(sudo ./install.sh 2>&1)" "Success."
-
-    test "Installs latest release automatically from GitHub" "$(mkdir -p "${HOME}"/tmp-sind && \
-cp install.sh "${HOME}"/tmp-sind/install.sh && \
-cd "${HOME}"/tmp-sind && \
-sudo "${HOME}"/tmp-sind/install.sh 2>&1 && \
-rm -rf "${HOME}"/tmp-sind\
-)" "Success."
+    test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success" # LCOV_EXCL_LINE
   fi
-
-  wait
 
   echo "sind.sh"
 
   # SHOULD PASS
   test "Prints usage" "$(./sind.sh -h 2>&1)" "Usage"
 
-  test "Prints version" "$(./sind.sh -v 2>&1)" "5.0.0b"
+  test "Prints version" "$(./sind.sh -v 2>&1)" "$(<VERSION)"
 
   test "Uses default title" "$(./sind.sh <<< $'\n' 2>&1)" "Choose one"
 
@@ -74,7 +55,7 @@ rm -rf "${HOME}"/tmp-sind\
 
   test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
-  if [[ "${TRAVIS:-false}" != "true" ]]; then
+  if [[ "${TRAVIS:-false}" != "true" ]]; then # LCOV_EXCL_START
     test "Handles here-string input" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
     test "Multiple choice" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
@@ -92,18 +73,14 @@ rm -rf "${HOME}"/tmp-sind\
     test "Doesn't add cancel if provided" "$(./sind.sh -o okay cancel <<< $'\e[A\n' 2>/dev/null)" "cancel"
 
     test "Doesn't require cancel" "$(./sind.sh -n <<< $'\e[A\n' 2>/dev/null)" "No"
-  fi
+  fi # LCOV_EXCL_END
 
   # SHOULD FAIL
-  set +e
-
   test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option: -x"
 
   test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error - The -t|--title option needs an arg."
 
   test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error - The -o|--options option needs at least one arg."
-
-  set -e
 
   echo -e "\n$passed/$total passed"
 
@@ -112,7 +89,7 @@ rm -rf "${HOME}"/tmp-sind\
   printf "Finished in %s.%s seconds\n" "$((timer / 1000))" "$((timer % 1000))"
 
   if [[ "$passed" -lt "$total" ]]; then
-    exit 64
+    exit 64 # LCOV_EXCL_LINE
   fi
 }
 

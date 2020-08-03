@@ -23,8 +23,8 @@
         if [[ "$REPLY" == "[A" ]]; then printf "up";
       elif [[ "$REPLY" == "[B" ]]; then printf "down";
       fi
-      key=;
     fi
+    key=;
   }
 
   cursor_on () {
