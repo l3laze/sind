@@ -35,12 +35,7 @@ run () {
 
   echo "install.sh"
 
-  # SHOULD PASS
-  if [[ "${TRAVIS:-false}" != "true" ]]; then
-    test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success" # LCOV_EXCL_LINE
-  else
-    test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success" # LCOV_EXCL_LINE
-  fi
+  test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success"
 
   echo "sind.sh"
 
@@ -55,25 +50,19 @@ run () {
 
   test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
 
-  if [[ "${TRAVIS:-false}" != "true" ]]; then # LCOV_EXCL_START
-    test "Handles here-string input" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+  test "Handles here-string input" "$(./sind.sh <<< $'\e[2A\n' 2>/dev/null)" "Yes"
 
-    test "Multiple choice" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
+  test "Multiple choice" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
 
-    test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[B \n' 2>/dev/null)" "No"
+  test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[B \n' 2>/dev/null)" "No"
 
-    test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
+  test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
 
-    test "Line mode" "$(./sind.sh -l <<< $'\e[B\n' 2>/dev/null)" "No"
+  test "Line mode" "$(./sind.sh -l <<< $'\e[B\n' 2>/dev/null)" "No"
 
-    test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
+  test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
-    test "Adds cancel if not provided" "$(./sind.sh <<< $'\e[A\n' 2>/dev/null)" "Cancel"
-
-    test "Doesn't add cancel if provided" "$(./sind.sh -o okay cancel <<< $'\e[A\n' 2>/dev/null)" "cancel"
-
-    test "Doesn't require cancel" "$(./sind.sh -n <<< $'\e[A\n' 2>/dev/null)" "No"
-  fi # LCOV_EXCL_END
+  test "Arg -c adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
   # SHOULD FAIL
   test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option: -x"

@@ -49,9 +49,8 @@
     local selected=0
     local title
     local choices=","
-    local no_cancel=1
-    local has_cancel=1
     local multiple=1
+    local add_cancel=1
     local index=0
     local size=0
     local usage
@@ -74,13 +73,23 @@
     cursor_off
     while [[ "$#" -gt 0 ]]; do
       case "${1:-}" in
-        -t|--title)
-          if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error - The -t|--title option needs an arg."
-            cleanup 65
-          fi
+        -c|--cancel)
           shift
-          title="$1"
+          if [[ "${opts[*],,}" != *"cancel"* ]]; then
+            add_cancel=0
+          fi
+        ;;
+        -h|--help)
+          echo -e >&2 "$usage\n"
+          cursor_on
+          exit
+        ;;
+        -l|--line)
+          size=1
+          shift
+        ;;
+        -m|--multiple)
+          multiple=0
           shift
         ;;
         -o|--options)
@@ -94,22 +103,14 @@
             shift
           done
         ;;
-        -m|--multiple)
-          multiple=0
+        -t|--title)
+          if [[ "$#" -lt 2 ]]; then
+            echo >&2 "Error - The -t|--title option needs an arg."
+            cleanup 65
+          fi
           shift
-        ;;
-        -l|--line)
-          size=1
+          title="$1"
           shift
-        ;;
-        -n|--no-cancel)
-          no_cancel=0
-          shift
-        ;;
-        -h|--help)
-          echo -e >&2 "$usage\n"
-          cursor_on
-          exit
         ;;
         -v|--version)
           cat VERSION >&2 && printf >&2 "\n"
@@ -122,6 +123,7 @@
         ;;
       esac
     done
+
     if [[ -z "${title:-}" ]]; then
       if [[ "$multiple" -eq 1 ]]; then
         title="Choose one"
@@ -129,25 +131,23 @@
         title="Choose some"
       fi
     fi
+
     if [[ "${#opts[@]}" -eq 0 ]]; then
       opts=(Yes No)
     fi
-    if [[ "$no_cancel" -eq 1 ]]; then
-      for o in "${opts[@]}"; do
-        if [[ "${o,,}" == "cancel" ]]; then
-          has_cancel=0
-        fi
-      done
-      if [[ "$has_cancel" -eq 1 ]]; then
-        opts+=(Cancel)
-      fi
+
+    if [[ "$add_cancel" -eq 0 ]]; then
+      opts+=(Cancel)
     fi
+
     if [[ "$multiple" -eq 1 ]]; then
       printf >&2 "%s\n(up|j, down|k, enter: choose)\n" "$title"
     else
       printf >&2 "%s\n(up|j, down|k, space: de/select, enter: done)\n" "$title"
     fi
+
     hr
+
     while true; do
       if [[ "$size" -eq "1" ]]; then
         printf >&2 "\e[1000D\e[2K"
@@ -165,6 +165,7 @@
 
         printf >&2 "\e[%sA" "${#opts[@]}"
       fi
+
       case $(key_input 2>/dev/null) in
         'up'|'j')
           selected=$((selected - 1))
@@ -200,7 +201,7 @@
               if [[ "$size" -eq 0 ]]; then
                 printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
               else
-                printf >&2 "\e[1000D\e[2A\e[J" # LCOV_EXCL_LINE
+                printf >&2 "\e[1000D\e[2A\e[J"
               fi
               choices=","
               continue
