@@ -8,7 +8,7 @@ jobs:
 
     - name: Build kcov executable
       run: |
-        sudo apt-get install -y binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev
+        sudo apt-get install -y binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev curl
         export PATH=${PATH}:${HOME}/kcov/bin
         wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
         tar xzf master.tar.gz
@@ -28,7 +28,7 @@ jobs:
         chmod u+rwx ./install.sh
         chmod u+rwx ./test.sh
         mkdir -p coverage
-        kcov --include-path=test.sh,install.sh,sind.sh coverage test.sh 2>/dev/null || exit 64
+        sudo kcov --include-path=test.sh,install.sh,sind.sh coverage test.sh 2>/dev/null || exit 64
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
