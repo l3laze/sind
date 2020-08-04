@@ -1,0 +1,38 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build kcov executable
+      run: |
+        sudo apt-get install -y binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev
+        export PATH=${PATH}:${HOME}/kcov/bin
+        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+        tar xzf master.tar.gz
+        cd kcov-master
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+        make
+        sudo make install
+        cd ../..
+        rm -rf kcov-master
+
+    - name: Run tests with coverage
+      run: |
+        mkdir -p coverage
+        chmod u+rwx ./sind.sh
+        chmod u+rwx ./install.sh
+        chmod u+rwx ./test.sh
+        mkdir -p coverage
+        kcov --include-path=test.sh,install.sh,sind.sh coverage test.sh 2>/dev/null || exit 64
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        files: ./coverage/test. sh.*/cobertura.xml,./coverage/test.sh.*/coverage.json
+        name: codecov-umbrella
+        fail_ci_if_error: true
