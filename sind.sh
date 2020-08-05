@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# This script is based on code by Alexander Klimetschek at
+# https://unix.stackexchange.com/a/415155/310780
+
 {
   #
   # Follows the suggested exit code range of 0 & 64-113
@@ -59,7 +63,7 @@
     opts=()
     version="$(cat VERSION)"
     name="${name%.sh}"
-    usage="$name v$version\n\nsind is a Simple INput Dialog for Bash 4+ with reasonable default options. It features single and multiple choice, and can display on a single line.\nUsage\n\n$0 [options...]\nWhere options are:"
+    usage="$name v$version\n\nsind is a Simple INput Dialog for Bash 4+ with reasonable defaults. It features single and multiple choice, and can display on a single line.\nUsage\n\n$0 [options...]\nWhere options are:\n-c|--cancel Add cancel to end of options, if not provided.\n-h|--help Display this message.\n-l|--line Single-line option list.\n-m|--multiple Multiple choice.\n-o|--options List of options, space-separated.\n-t|--title Header/title to print as prompt.\n-v|--version Print version."
 
     cleanup () {
       printf >&2 "\e[%sB\n" "${#opts[@]}"
@@ -141,9 +145,9 @@
     fi
 
     if [[ "$multiple" -eq 1 ]]; then
-      printf >&2 "%s\n(up|j, down|k, enter: choose)\n" "$title"
+      printf >&2 "%s\n(↑/j or ↓/|k, enter: choose)\n" "$title"
     else
-      printf >&2 "%s\n(up|j, down|k, space: de/select, enter: done)\n" "$title"
+      printf >&2 "%s\n(↑/j or ↓/|k, space: de/select, enter: done)\n" "$title"
     fi
 
     hr
@@ -201,7 +205,7 @@
               if [[ "$size" -eq 0 ]]; then
                 printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
               else
-                printf >&2 "\e[1000D\e[2A\e[J"
+                printf >&2 "\e[1000D\e[2A\e[J" # LCOV_EXCL_LINE
               fi
               choices=","
               continue

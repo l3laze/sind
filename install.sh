@@ -30,9 +30,7 @@
       version="${version/*\"tag_name\": \"/}"
       version="${version/\"*/}"
       echo >&2 "Installing latest sind from GitHub @ $version for current user."
-      if [[ -d "/usr/local/bin" ]]; then
-        echo >&2 "Destination exists..."
-      fi
+
       do_download -o "/usr/local/bin/sind" "https://raw.githubusercontent.com/l3laze/sind/${version}/sind.sh" || {
         echo >&2 "Failed to download sind.sh as /usr/local/bin/sind" # LCOV_EXCL_LINE
         exit 68 # LCOV_EXCL_LINE
