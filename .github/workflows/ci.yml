@@ -8,6 +8,8 @@ jobs:
 
     - name: Build kcov executable
       run: |
+        sudo apt-get update
+        sudo apt-get upgrade -y
         sudo apt-get install -y binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev
         export PATH=${PATH}:${HOME}/kcov/bin
         wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
