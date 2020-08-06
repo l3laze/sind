@@ -57,6 +57,7 @@
     local add_cancel=1
     local index=0
     local size=0
+    local sel_sym=">"
     local usage
     local version
     local name="${0#\.\/}"
@@ -121,6 +122,11 @@
           cursor_on
           exit
         ;;
+        -y|--selected-symbol)
+          shift
+          sel_sym="$1"
+          shift
+        ;;
         *)
           echo >&2 "Error - Unknown option: $1"
           cleanup 64
@@ -155,15 +161,30 @@
     while true; do
       if [[ "$size" -eq "1" ]]; then
         printf >&2 "\e[1000D\e[2K"
+
+        if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$selected]},"*) ]]; then
+          printf >&2 "$sel_sym"
+        else
+          printf >&2 " "
+        fi
+
         print_selected >&2 "${opts[$selected]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
           printf >&2 "\n"
-          if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) || "$index" == "$selected" ]]; then
+
+          if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) ]]; then
+            printf >&2 "$sel_sym"
+          elif [[ "$multiple" -eq 0 ]]; then
+            printf >&2 " "
+          fi
+
+          if [[ "$index" == "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
-            printf >&2 "%s" "${opts[$((index))]}"
+            printf "%s" "${opts[$((index))]}"
           fi
+
           index="((index + 1))"
         done
 
