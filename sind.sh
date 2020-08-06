@@ -104,6 +104,10 @@
           fi
           shift
           while [[ "$#" -gt 0 && ! "$1" =~ ^--? ]]; do
+            if [[ "$1" == "" ]]; then
+              echo >&2 "Error: Empty options are not allowed."
+              cleanup 65
+            fi
             opts+=("$1")
             shift
           done

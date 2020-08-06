@@ -73,9 +73,13 @@ run () {
 
   test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error: The -o|--options option needs at least one arg."
 
+  test "Fails with empty arg to -o|--options" "$(./sind.sh -o '' 2>&1)" "Error: Empty options are not allowed."
+
   test "Fails with -y|--selected-symbol and no args" "$(./sind.sh -y 2>&1)" "Error: The -y|--selected-symbol option needs a one-character arg."
 
   test "Fails if arg to -y|--selected-symbol is > 1 character" "$(./sind.sh -y 69 2>&1)" "Error: The arg to -y|--selected-symbol must be only one character"
+
+  test "Fails if arg to -y|--selected-symbol is empty" "$(./sind.sh -y '' 2>&1)" "Error: The arg to -y|--selected-symbol must be only one character"
 
   echo -e "\n$passed/$total passed"
 
