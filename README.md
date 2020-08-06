@@ -48,15 +48,16 @@ A semi-magical list-based selection dialog for Bash 4+ with reasonable defaults.
 ### Options
 
 
-| Option | What? |
+| Option | Default | What? |
 | --- | --- |
-| -c, --cancel | Add cancel to end of options. |
-| -h, --help | Display this message. |
-| -l, --line | Single-line option list. |
-| -m, --multiple | Multiple choice. |
-| -o, --options | List of options, space-separated. |
-| -t, --title | Header to print above prompt. |
-| -v, --version | Print version. |
+| -c, --cancel | - | Add cancel to end of options. |
+| -h, --help | - | Display this message. |
+| -l, --line | - | Single-line list mode. |
+| -m, --multiple | - | Multiple choice mode. |
+| -o, --options | Yes, No | List of options, space-separated (requires at least one arg). |
+| -t, --title | Choose one/some | Choice prompt printed above list. |
+| -v, --version | - | Print version. |
+| -y, --selected-symbol | > | Character used to mark selected options in multiple choice mode. |
 
 
 ### Example
@@ -74,7 +75,7 @@ echo "$(sind -t Title -o Okay -c)"
 Title
 (up|j, down|k, enter: choose)
 ----------------------------------
-[7mOkay[27m << Color "reversed" on selected item
+Okay
 Cancel
 ----------------------------------
 Okay
@@ -147,6 +148,9 @@ Please ensure your pull request adheres to the following guidelines:
 
 
 <details><summary><b>This project is distributed under The Unlicense:</b></summary>
+
+
+<br/>
 
 
 This is free and unencumbered software released into the public domain.

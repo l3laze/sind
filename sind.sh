@@ -12,7 +12,7 @@
   # |    ---    |   ---   |
   # |     0     |  No errors. |
   # |    64     |  Unknown option. |
-  # |    65     |  Not enough args for option. |
+  # |    65     |  Invalid arg for option |
   # |    ---    |  --- |
   #
   key_input () {
@@ -62,9 +62,9 @@
     local version
     local name="${0#\.\/}"
     opts=()
-    version="$(cat VERSION)"
+    version="$(<VERSION)"
     name="${name%.sh}"
-    usage="$name v$version\n\nsind is a Simple INput Dialog for Bash 4+ with reasonable defaults. It features single and multiple choice, and can display on a single line.\nUsage\n\n$0 [options...]\nWhere options are:\n-c|--cancel Add cancel to end of options, if not provided.\n-h|--help Display this message.\n-l|--line Single-line option list.\n-m|--multiple Multiple choice.\n-o|--options List of options, space-separated.\n-t|--title Header/title to print as prompt.\n-v|--version Print version."
+    usage="$name v$version\n\nA semi-magical list-based selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line.\n\nUsage $0 [options...]\n\nWhere options are:\n\n-c|--cancel\n    Add cancel to end of options, if not provided.\n-h|--help\n    Display this message.\n-l|--line\n    Single-line list mode.\n-m|--multiple\n    Multiple choice mode.\n-o|--options = Yes No\n    Space-separated options (requires at least one arg).\n-t|--title = Choose one/some (requires one arg).\n    Choice prompt printed above list.\n-v|--version\n    Print version.\n-y|--selected-symbol = >\n    Character used to mark selected options in multiple choice."
 
     cleanup () {
       printf >&2 "\e[%sB\n" "${#opts[@]}"
@@ -99,7 +99,7 @@
         ;;
         -o|--options)
           if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error - The -o|--options option needs at least one arg."
+            echo >&2 "Error: The -o|--options option needs at least one arg."
             cleanup 65
           fi
           shift
@@ -110,12 +110,16 @@
         ;;
         -t|--title)
           if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error - The -t|--title option needs an arg."
+            echo >&2 "Error: The -t|--title option needs an arg."
             cleanup 65
           fi
           shift
           title="$1"
           shift
+          if [[ "${#title}" -lt 1 ]]; then
+            echo >&2 "Error: The -t|--title option needs an arg of at least one character."
+            cleanup 65
+          fi
         ;;
         -v|--version)
           cat VERSION >&2 && printf >&2 "\n"
@@ -123,13 +127,22 @@
           exit
         ;;
         -y|--selected-symbol)
+          if [[ "$#" -lt 2 ]]; then
+            echo >&2 "Error: The -y|--selected-symbol option needs a one-character arg."
+            cleanup 65
+          fi
           shift
           sel_sym="$1"
           shift
+          if [[ "${#sel_sym}" -ne 1 ]]; then
+            echo >&2 "Error: The arg to -y|--selected-symbol must be only one character."
+            cleanup 65
+          fi
         ;;
         *)
-          echo >&2 "Error - Unknown option: $1"
-          cleanup 64
+          echo -e >&2 "Error: Unknown option: $1\n\n$usage\n"
+          cursor_on
+          exit
         ;;
       esac
     done
@@ -194,10 +207,12 @@
       case $(key_input 2>/dev/null) in
         'up'|'j')
           selected=$((selected - 1))
+
           if [ "$selected" -lt 0 ]; then selected=$(("${#opts[@]}" - 1)); fi
         ;;
         'down'|'k')
           selected=$((selected + 1))
+
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
         ;;
         'space')
@@ -215,7 +230,9 @@
           else
             printf >&2 "\n"
           fi
+
           hr
+
           if [[ "$multiple" -ne 0 ]]; then
             printf "%s\n" "${opts[$selected]}"
           else
@@ -225,15 +242,15 @@
 
               if [[ "$size" -eq 0 ]]; then
                 printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
-              else
-                printf >&2 "\e[1000D\e[2A\e[J" # LCOV_EXCL_LINE
               fi
+
               choices=","
               continue
             else
               printf "%s\n" "${choice_array[@]}"
             fi
           fi
+
           cursor_on
           exit
         ;;

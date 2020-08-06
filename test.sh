@@ -19,7 +19,7 @@ run () {
 
   test () {
     label="$1"
-    actual="$2" #{2//(\x1b[[a-Z0-9;]+)/}"
+    actual="$2"
     expected="$3"
     ((total++))
 
@@ -60,16 +60,22 @@ run () {
 
   test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
-  test "Arg -c adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+  test "Arg -c|--cancel adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
-  test "Arg -y changes selection symbol" "$(./sind.sh -m -y • <<< $' \e[B\n' 2>&1)" "•Yes"
+  test "Arg -y|--selected-symbol changes selection mark" "$(./sind.sh -m -y + <<< $' \e[B\n' 2>&1)" "+Yes"
 
   # SHOULD FAIL
-  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option: -x"
+  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error: Unknown option: -x"
 
-  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error - The -t|--title option needs an arg."
+  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error: The -t|--title option needs an arg."
 
-  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error - The -o|--options option needs at least one arg."
+  test "Fails if arg to -t|--title is < 1 character" "$(./sind.sh -t '' 2>&1)" "Error: The -t|--title option needs an arg of at least one character."
+
+  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error: The -o|--options option needs at least one arg."
+
+  test "Fails with -y|--selected-symbol and no args" "$(./sind.sh -y 2>&1)" "Error: The -y|--selected-symbol option needs a one-character arg."
+
+  test "Fails if arg to -y|--selected-symbol is > 1 character" "$(./sind.sh -y 69 2>&1)" "Error: The arg to -y|--selected-symbol must be only one character"
 
   echo -e "\n$passed/$total passed"
 
