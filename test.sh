@@ -2,9 +2,7 @@
 
 if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
-  shellcheck sind.sh && printf "  ✓ sind.sh\n" || exit 64
-  shellcheck install.sh && printf "  ✓ install.sh\n" || exit 64
-  shellcheck test.sh && printf "  ✓ test.sh\n" || exit 64
+  shellcheck ./*.sh && printf "  ✓ sind.sh\n  ✓ install.sh\n  ✓ test.sh\n" || exit 64
 else
   echo >&2 "Need shellcheck installed for linting." # LCOV_EXCL_LINE
 fi
@@ -63,6 +61,8 @@ run () {
   test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
   test "Arg -c adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+
+  test "Arg -y changes selection symbol" "$(./sind.sh -m -y • <<< $' \e[B\n' 2>&1)" "•Yes"
 
   # SHOULD FAIL
   test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error - Unknown option: -x"

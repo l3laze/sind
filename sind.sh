@@ -162,9 +162,9 @@
       if [[ "$size" -eq "1" ]]; then
         printf >&2 "\e[1000D\e[2K"
 
-        if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$selected]},"*) ]]; then
-          printf >&2 "$sel_sym"
-        else
+        if [[ ("$multiple" -eq 0 && "$choices" == *",${opts[$selected]},"*) ]]; then
+          printf >&2 "%s" "$sel_sym"
+        elif [[ "$multiple" -eq 0 ]]; then
           printf >&2 " "
         fi
 
@@ -174,7 +174,7 @@
           printf >&2 "\n"
 
           if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) ]]; then
-            printf >&2 "$sel_sym"
+            printf >&2 "%s" "$sel_sym"
           elif [[ "$multiple" -eq 0 ]]; then
             printf >&2 " "
           fi

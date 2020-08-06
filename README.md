@@ -15,6 +15,7 @@ A semi-magical list-based selection dialog for Bash 4+ with reasonable defaults.
 
 <details><summary><b>Table of contents</b></summary>
 
+  * [Demo](#Demo)
   * [Usage](#Usage)
     - [Options](#Options)
     - [Example](#Example)
@@ -24,8 +25,18 @@ A semi-magical list-based selection dialog for Bash 4+ with reasonable defaults.
     - [Manual](#Manual)
   * [Credits](#Credits)
   * [Contributing](#Contributing)
-  * [License](#License)
+  * [Unlicense](#Unlicense)
 </details>
+
+
+----
+
+
+## Demo
+
+
+![sind.sh demo; asciinema + Termux](https://user-images.githubusercontent.com/18404758/89495559-21bb5e00-d77e-11ea-9eb9-41d569a3cc79.gif)
+
 
 
 ----
@@ -122,17 +133,48 @@ For a single user it can be installed to `$HOME/bin`  (though it may not exist b
 Please ensure your pull request adheres to the following guidelines:
 
 
-- **Please [Open an issue](https://github.com/l3laze/sind/issues) before creating any new features**, for discussion.
+- **Lint with [shellcheck](https://www.shellcheck.net/)**. This is done on push, but doing so while developing helps minimize senseless builds which are a waste of resources.
+- **[Open an issue](https://github.com/l3laze/sind/issues) before creating any new features**, for discussion.
 - Bug fixes & POSIX-friendly changes are more than welcome!
 - Check your spelling and grammar (if applicable).
-- Try to use a text editor that will remove trailing whitespace (though mine on mobile can't..lol).
-- Lint with [shellcheck](https://www.shellcheck.net/). This is done on push, but doing so while developing helps minimize senseless builds which are a waste of resources.
+- Try to use a text editor that will remove trailing whitespace, or configure git to do so.
 
 
 ----
 
 
-## License
+## Unlicense
 
 
-This project is distributed under The Unlicense.
+<details><summary><b>This project is distributed under The Unlicense:</b></summary>
+
+
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <https://unlicense.org>
+
+</details>
+
+
+<br />
