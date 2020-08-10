@@ -8,23 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v4.0.0] - {date}
 ### Added
-- Multiple choice feature.
-- -c|--cancel option, to add cancel if it's not provided.
 - CHANGELOG.md -- \*hint hint\*.
 - kcov for coverage.
+- visual-test.sh for visually checking results.
+- Multiple choice feature.
+- Single line option-list feature.
+- -c|--cancel option, to add cancel if it's not provided.
 
 ### Changed
 - Cancel is no longer a default option.
 - Title is no longer required.
 - test.sh now measures second.millisecond runtime instead of seconds.
 - Using VERSION file rather than a hard-coded variable.
+- Refractored internal structure to help support here-string input for automation, to ease testing.
 
 ### Fixed
 - Moved to GitHub CI from Travis-CI, where it just works and coverage can be properly measured.
 
 ### Removed
 - No more arguments to install.sh.
-- Removed set -euo pipefail throughout.
+- Removed `set -euo pipefail` throughout.
 
 
 ----

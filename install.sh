@@ -10,7 +10,7 @@
 
   do_download () {
     if user_has "curl"; then
-      curl -q --compressed "$@"
+      curl -s -q --compressed "$@"
     elif user_has "wget"; then # LCOV_EXCL_LINE
       # Emulate curl with wget
       ARGS=$(echo "$*" | command sed -e 's/--compressed //' -e 's/-o /-O /' -e 's/-C - /-c /') # LCOV_EXCL_LINE

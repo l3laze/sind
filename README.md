@@ -1,7 +1,7 @@
 # sind
 
 
-A semi-magical list-based selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line. Developed on Ubuntu 18+ through [UserLAnd on Android](https://play.google.com/store/apps/details?id=tech.ula).
+A semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line. Developed on Ubuntu 18+ through [UserLAnd on Android](https://play.google.com/store/apps/details?id=tech.ula).
 
 
 ![CI](https://github.com/l3laze/sind/workflows/CI/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3212c5503ee94a42adb04cd730304493)](https://www.codacy.com/manual/l3laze/sind?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=l3laze/sind&amp;utm_campaign=Badge_Grade) [![codecov](https://codecov.io/gh/l3laze/sind/branch/master/graph/badge.svg)](https://codecov.io/gh/l3laze/sind)
@@ -50,14 +50,14 @@ A semi-magical list-based selection dialog for Bash 4+ with reasonable defaults.
 
 | Option | Default | What? |
 | --- | --- |
-| -c, --cancel | - | Add cancel to end of options. |
+| -c, --cancel | - | Add cancel to end of options if it doesn't exist. |
 | -h, --help | - | Display this message. |
 | -l, --line | - | Single-line list mode. |
 | -m, --multiple | - | Multiple choice mode. |
-| -o, --options | Yes, No | List of options, space-separated (requires at least one arg). |
-| -t, --title | Choose one/some | Choice prompt printed above list. |
+| -o, --options | Yes No | List of options, space-separated (requires at least one arg). |
+| -t, --title | Choose one/Choose some | Prompt printed above list. |
 | -v, --version | - | Print version. |
-| -y, --selected-symbol | > | Character used to mark selected options in multiple choice mode. |
+| --marker | > | Character used to mark selected options in multiple choice mode. |
 
 
 ### Example

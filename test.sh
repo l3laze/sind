@@ -2,7 +2,7 @@
 
 if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
-  shellcheck ./*.sh && printf "  ✓ sind.sh\n  ✓ install.sh\n  ✓ test.sh\n" || exit 64
+  shellcheck ./*.sh && printf "  ✓ sind.sh\n  ✓ install.sh\n  ✓ test.sh\n  ✓ visual-test.sh\n" || exit 64
 else
   echo >&2 "Need shellcheck installed for linting." # LCOV_EXCL_LINE
 fi
@@ -35,9 +35,12 @@ run () {
 
   test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success"
 
+
   echo "sind.sh"
 
+
   # SHOULD PASS
+
   test "Prints usage" "$(./sind.sh -h 2>&1)" "Usage"
 
   test "Prints version" "$(./sind.sh -v 2>&1)" "$(<VERSION)"
@@ -50,9 +53,9 @@ run () {
 
   test "Handles here-string input" "$(./sind.sh <<< $'\e[2A\n' 2>/dev/null)" "Yes"
 
-  test "Multiple choice" "$(./sind.sh -m <<< $' \e[B ' 2>/dev/null)" $'Yes\nNo'
+  test "Multiple choice" "$(./sind.sh -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
-  test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[B \n' 2>/dev/null)" "No"
+  test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[A \n' 2>/dev/null)" "No"
 
   test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
 
@@ -62,24 +65,28 @@ run () {
 
   test "Arg -c|--cancel adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
 
-  test "Arg -y|--selected-symbol changes selection mark" "$(./sind.sh -m -y + <<< $' \e[B\n' 2>&1)" "+Yes"
+  test "Arg --marker changes selection mark" "$(./sind.sh -m --marker + <<< $' \e[B\n' 2>&1)" "+Yes"
+
+  test "Splits long title from directions" "$(./sind.sh -t 'This should be a sufficiently long title to cause it to have a newline between itself and the directions' <<< $'\n' 2>&1)" $'This should be a sufficiently long title to cause it to have a newline between itself and the directions\n('
+
 
   # SHOULD FAIL
+
   test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error: Unknown option: -x"
 
-  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error: The -t|--title option needs an arg."
+  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error: Title must be at least one character."
 
-  test "Fails if arg to -t|--title is < 1 character" "$(./sind.sh -t '' 2>&1)" "Error: The -t|--title option needs an arg of at least one character."
+  test "Fails if arg to -t|--title is empty" "$(./sind.sh -t '' 2>&1)" "Error: Empty title is not allowed."
 
-  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error: The -o|--options option needs at least one arg."
+  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error: Options must be at least one character."
 
   test "Fails with empty arg to -o|--options" "$(./sind.sh -o '' 2>&1)" "Error: Empty options are not allowed."
 
-  test "Fails with -y|--selected-symbol and no args" "$(./sind.sh -y 2>&1)" "Error: The -y|--selected-symbol option needs a one-character arg."
+  test "Fails with --marker and no args" "$(./sind.sh --marker 2>&1)" "Error: Marker must be one character."
 
-  test "Fails if arg to -y|--selected-symbol is > 1 character" "$(./sind.sh -y 69 2>&1)" "Error: The arg to -y|--selected-symbol must be only one character"
+  test "Fails if arg to --marker is > 1 character" "$(./sind.sh --marker 69 2>&1)" "Error: Marker can't be more than one character."
 
-  test "Fails if arg to -y|--selected-symbol is empty" "$(./sind.sh -y '' 2>&1)" "Error: The arg to -y|--selected-symbol must be only one character"
+  test "Fails if arg to --marker is empty" "$(./sind.sh --marker '' 2>&1)" "Error: Marker can't be empty."
 
   echo -e "\n$passed/$total passed"
 

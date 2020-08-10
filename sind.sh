@@ -3,18 +3,20 @@
 # This script is based on code by Alexander Klimetschek at
 # https://unix.stackexchange.com/a/415155/310780
 
+#
+# Follows the suggested exit code range of 0 & 64-113
+# from http://www.tldp.org/LDP/abs/html/exitcodes.html
+#
+# | Exit Code | Meaning |
+# |    ---    |   ---   |
+# |     0     |  No errors. |
+# |    64     |  Unknown option. |
+# |    65     |  Invalid arg for option. |
+# |    66     |  Abnormal exit (ctrl + c, etc) |
+# |    ---    |  --- |
+#
+
 {
-  #
-  # Follows the suggested exit code range of 0 & 64-113
-  # from http://www.tldp.org/LDP/abs/html/exitcodes.html
-  #
-  # | Exit Code | Meaning |
-  # |    ---    |   ---   |
-  # |     0     |  No errors. |
-  # |    64     |  Unknown option. |
-  # |    65     |  Invalid arg for option |
-  # |    ---    |  --- |
-  #
   key_input () {
     local key
     IFS=; read -rsN 1
@@ -52,30 +54,34 @@
     local opts
     local selected=0
     local title
+    local directions
     local choices=","
     local multiple=1
     local add_cancel=1
     local index=0
     local size=0
-    local sel_sym=">"
+    local sel_mark=">"
     local usage
     local version
     local name="${0#\.\/}"
+
     opts=()
     version="$(<VERSION)"
     name="${name%.sh}"
-    usage="$name v$version\n\nA semi-magical list-based selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line.\n\nUsage $0 [options...]\n\nWhere options are:\n\n-c|--cancel\n    Add cancel to end of options, if not provided.\n-h|--help\n    Display this message.\n-l|--line\n    Single-line list mode.\n-m|--multiple\n    Multiple choice mode.\n-o|--options = Yes No\n    Space-separated options (requires at least one arg).\n-t|--title = Choose one/some (requires one arg).\n    Choice prompt printed above list.\n-v|--version\n    Print version.\n-y|--selected-symbol = >\n    Character used to mark selected options in multiple choice."
+    usage="$name $version\n\nA semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line.\n\nUsage $0 [options...]\n\nWhere options are:\n\n-c|--cancel\n     Add cancel to end of options if it doesn't exist\n-h|--help\n    Display this message\n-l|--line\n    Single-line list mode\n-m|--multiple\n    Multiple choice mode\n-o|--options = Yes No\n    Space-separated options (requires at least one arg)\n-t|--title = Choose one/some (requires one arg)\n    Prompt printed above list\n-v|--version\n    Print version\n--marker = >\n    Character used to mark selected options in multiple choice"
 
     cleanup () {
       printf >&2 "\e[%sB\n" "${#opts[@]}"
-      hr
-      printf >&2 "Cancel\n"
+      [[ "$-" == *"i"* ]] && stty echo
       cursor_on
-      exit "${1:-0}"
+      # shellcheck disable=SC2086
+      exit $1
     }
 
     trap "cleanup" HUP INT QUIT ABRT
     cursor_off
+    [[ "$-" == *"i"* ]] && stty -echo
+
     while [[ "$#" -gt 0 ]]; do
       case "${1:-}" in
         -c|--cancel)
@@ -85,9 +91,8 @@
           fi
         ;;
         -h|--help)
-          echo -e >&2 "$usage\n"
-          cursor_on
-          exit
+          echo -en >&2 "$usage"
+          cleanup 0
         ;;
         -l|--line)
           size=1
@@ -97,15 +102,31 @@
           multiple=0
           shift
         ;;
+        --marker)
+          if [[ "$#" -lt 2 ]]; then
+            printf >&2 "Error: Marker must be one character."
+            cleanup 65
+          fi
+          shift
+          sel_mark="$1"
+          shift
+          if [[ "${#sel_mark}" -lt 1 ]]; then
+            printf >&2 "Error: Marker can't be empty."
+            cleanup 65
+          elif [[ "${#sel_mark}" -gt 1 ]]; then
+            printf >&2 "Error: Marker can't be more than one character."
+            cleanup 65
+          fi
+        ;;
         -o|--options)
           if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error: The -o|--options option needs at least one arg."
+            printf >&2 "Error: Options must be at least one character."
             cleanup 65
           fi
           shift
           while [[ "$#" -gt 0 && ! "$1" =~ ^--? ]]; do
             if [[ "$1" == "" ]]; then
-              echo >&2 "Error: Empty options are not allowed."
+              printf >&2 "Error: Empty options are not allowed."
               cleanup 65
             fi
             opts+=("$1")
@@ -114,39 +135,24 @@
         ;;
         -t|--title)
           if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error: The -t|--title option needs an arg."
+            printf >&2 "Error: Title must be at least one character."
             cleanup 65
           fi
           shift
           title="$1"
           shift
           if [[ "${#title}" -lt 1 ]]; then
-            echo >&2 "Error: The -t|--title option needs an arg of at least one character."
+            printf >&2 "Error: Empty title is not allowed."
             cleanup 65
           fi
         ;;
         -v|--version)
-          cat VERSION >&2 && printf >&2 "\n"
-          cursor_on
-          exit
-        ;;
-        -y|--selected-symbol)
-          if [[ "$#" -lt 2 ]]; then
-            echo >&2 "Error: The -y|--selected-symbol option needs a one-character arg."
-            cleanup 65
-          fi
-          shift
-          sel_sym="$1"
-          shift
-          if [[ "${#sel_sym}" -ne 1 ]]; then
-            echo >&2 "Error: The arg to -y|--selected-symbol must be only one character."
-            cleanup 65
-          fi
+          printf >&2 "%s" "$(<VERSION)"
+          cleanup 0
         ;;
         *)
-          echo -e >&2 "Error: Unknown option: $1\n\n$usage\n"
-          cursor_on
-          exit
+          printf >&2 "Error: Unknown option: %s." "$1"
+          cleanup 64
         ;;
       esac
     done
@@ -168,19 +174,27 @@
     fi
 
     if [[ "$multiple" -eq 1 ]]; then
-      printf >&2 "%s\n(↑/j or ↓/|k, enter: choose)\n" "$title"
+      directions="(↑/j or ↓/|k, enter: choose)"
     else
-      printf >&2 "%s\n(↑/j or ↓/|k, space: de/select, enter: done)\n" "$title"
+      directions="(↑|j or ↓|k, space: de/select, enter: done)"
+    fi
+
+    if [[ "$((${#title} + ${#directions} + 1))" -lt "${COLUMNS:-$(tput cols)}" ]]; then
+      echo -e >&2 "$title $directions"
+    else
+      echo -e >&2 "$title\n$directions"
     fi
 
     hr
 
+    [[ "$size" -eq 1 ]] && printf "\n"
+
     while true; do
       if [[ "$size" -eq "1" ]]; then
-        printf >&2 "\e[1000D\e[2K"
+        printf >&2 "\e[2K\e[1000D"
 
         if [[ ("$multiple" -eq 0 && "$choices" == *",${opts[$selected]},"*) ]]; then
-          printf >&2 "%s" "$sel_sym"
+          printf >&2 "%s" "$sel_mark"
         elif [[ "$multiple" -eq 0 ]]; then
           printf >&2 " "
         fi
@@ -191,7 +205,7 @@
           printf >&2 "\n"
 
           if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) ]]; then
-            printf >&2 "%s" "$sel_sym"
+            printf >&2 "%s" "$sel_mark"
           elif [[ "$multiple" -eq 0 ]]; then
             printf >&2 " "
           fi
@@ -208,7 +222,7 @@
         printf >&2 "\e[%sA" "${#opts[@]}"
       fi
 
-      case $(key_input 2>/dev/null) in
+      case "$(key_input 2>/dev/null)" in # LCOV_EXCL_LINE
         'up'|'j')
           selected=$((selected - 1))
 
@@ -238,25 +252,28 @@
           hr
 
           if [[ "$multiple" -ne 0 ]]; then
-            printf "%s\n" "${opts[$selected]}"
+            printf "%s" "${opts[$selected]}"
           else
             IFS=',' read -ra choice_array <<< "${choices#,}"
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
               >&2 read -rsn 1 -p "Make a choice (press any key to continue)"
 
-              if [[ "$size" -eq 0 ]]; then
-                printf >&2 "\e[1000D\e[1A\e[J\e[%sA" "$((${#opts[@]} + 1))"
+              printf >&2 "\e[1000D\e[2A\e[J"
+
+              if [[ "$size" -ne 1 ]]; then
+                printf >&2 "\e[%sA" "$((${#opts[@]}))"
               fi
 
-              choices=","
               continue
             else
-              printf "%s\n" "${choice_array[@]}"
+              for ((index = 0; index < "${#choice_array[@]}"; index++)); do
+                printf "\n"
+                printf "%s" "${choice_array[$index]}"
+              done
             fi
           fi
 
-          cursor_on
-          exit
+          cleanup 0
         ;;
       esac
     done
