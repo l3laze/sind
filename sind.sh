@@ -180,7 +180,7 @@
     fi
 
     if [[ "$((${#title} + ${#directions} + 1))" -lt "${COLUMNS:-$(tput cols)}" ]]; then
-      echo -e >&2 "$title $directions"
+      echo -e >&2 "$title $directions" # LCOV_EXCL_LINE
     else
       echo -e >&2 "$title\n$directions"
     fi
