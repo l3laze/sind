@@ -1,75 +1,101 @@
 #!/usr/bin/env bash
 
+if command -v "shellcheck" > /dev/null 2>&1; then
+  echo "shellcheck"
+  shellcheck ./*.sh && printf "  ✓ sind.sh\n  ✓ install.sh\n  ✓ test.sh\n  ✓ visual-test.sh\n" || exit 64
+else
+  echo >&2 "Need shellcheck installed for linting." # LCOV_EXCL_LINE
+fi
+
 run () {
-  local timer="$SECONDS"
+  local timer
   local label
   local actual
   local expected
   local passed=0
   local total=0
 
+  timer="$(date +%s%3N)"
+
   test () {
     label="$1"
-    actual=$(tr -dc '[:print:]' <<< "$2")
-    actual="${actual//\[\?25l/}"
-    actual="${actual//\[\?25h/}"
+    actual="$2"
     expected="$3"
-  
-    total=$((total + 1))
+    ((total++))
 
     if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
-      passed=$((passed + 1))
+      ((passed++))
     else
-      printf "  × %s\n'%s' != '%s'\n" "$label" "$expected" "$actual"
+      printf "  × %s\n%s != %s\n" "$label" "$expected" "$actual" # LCOV_EXCL_LINE
     fi
   }
 
+  echo "install.sh"
 
-  echo "sind/sind.sh"
+  test "Installs latest release automatically from GitHub" "$(./install.sh 2>&1)" "Success"
+
+
+  echo "sind.sh"
+
 
   # SHOULD PASS
-  test "Takes a title" "$(./sind.sh -t t <<< $'\n' 2>/dev/null)" "Yes"
 
-  test "Takes an option" "$(./sind.sh -t t -o Okay <<< $'\n' 2>/dev/null)" "Okay"
+  test "Prints usage" "$(./sind.sh -h 2>&1)" "Usage"
 
-  [[ "${TRAVIS:-false}" != "true" ]] && { test "Handles here-string input" "$(./sind.sh -t t <<< $'\e[A\n' 2>/dev/null)" "Cancel"; }
+  test "Prints version" "$(./sind.sh -v 2>&1)" "$(<VERSION)"
+
+  test "Uses default title" "$(./sind.sh <<< $'\n' 2>&1)" "Choose one"
+
+  test "Takes a title" "$(./sind.sh -t "title goes here" <<< $'\n' 2>&1)" "title goes here"
+
+  test "Takes an option" "$(./sind.sh -o Okay <<< $'\n' 2>/dev/null)" "Okay"
+
+  test "Handles here-string input" "$(./sind.sh <<< $'\e[2A\n' 2>/dev/null)" "Yes"
+
+  test "Multiple choice" "$(./sind.sh -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
+
+  test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[A \n' 2>/dev/null)" "No"
+
+  test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
+
+  test "Line mode" "$(./sind.sh -l <<< $'\e[B\n' 2>/dev/null)" "No"
+
+  test "Combo line mode + multiple choice" "$(./sind.sh -l -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
+
+  test "Arg -c|--cancel adds cancel if not provided" "$(./sind.sh -c <<< $'\e[A\n' 2>/dev/null)" "Cancel"
+
+  test "Arg --marker changes selection mark" "$(./sind.sh -m --marker + <<< $' \e[B\n' 2>&1)" "+Yes"
+
+  test "Splits long title from directions" "$(./sind.sh -t 'This should be a sufficiently long title to cause it to have a newline between itself and the directions' <<< $'\n' 2>&1)" $'This should be a sufficiently long title to cause it to have a newline between itself and the directions\n('
 
 
   # SHOULD FAIL
-  set +e
 
-  test "Fails with no title specified" "$(./sind.sh -o Okay 2>&1)" "Error - No title specified."
+  test "Fails with invalid options" "$(./sind.sh -x 2>&1)" "Error: Unknown option: -x"
 
-  test "Fails with no args" "$(./sind.sh 2>&1)" "Error - Specify a title with -t or --title."
+  test "Fails with -t|--title and no arg" "$(./sind.sh -t 2>&1)" "Error: Title must be at least one character."
 
-  test "Fails with -t|--title and no args" "$(./sind.sh 2>&1 -t)" "Error - The -t|--title option needs an arg."
+  test "Fails if arg to -t|--title is empty" "$(./sind.sh -t '' 2>&1)" "Error: Empty title is not allowed."
 
-  test "Fails with -o|--options and no args" "$(./sind.sh 2>&1 -o)" "Error - The -o|--options option needs at least one arg."
+  test "Fails with -o|--options and no args" "$(./sind.sh -o 2>&1)" "Error: Options must be at least one character."
 
-  test "Fails with invalid option" "$(./sind.sh -x 2>&1)" "Error - Unknown option - -x"
+  test "Fails with empty arg to -o|--options" "$(./sind.sh -o '' 2>&1)" "Error: Empty options are not allowed."
 
-  set -e
+  test "Fails with --marker and no args" "$(./sind.sh --marker 2>&1)" "Error: Marker must be one character."
 
+  test "Fails if arg to --marker is > 1 character" "$(./sind.sh --marker 69 2>&1)" "Error: Marker can't be more than one character."
 
-  echo "sind/install.sh"
-
-  # SHOULD PASS
-  test "Installs from GitHub" "$(sudo ./install.sh -t 2>&1)" "Installation from GitHub was successful!"
-
-  test "Installs from local copy" "$(sudo ./install.sh -l -t 2>&1)" "Installation from local copy was successful!"
-
-  # SHOULD FAIL
-  test "Fails with invalid option" "$(./install.sh -x 2>&1)" "Error - unknown option -x"
-
+  test "Fails if arg to --marker is empty" "$(./sind.sh --marker '' 2>&1)" "Error: Marker can't be empty."
 
   echo -e "\n$passed/$total passed"
-  timer="$((SECONDS - timer))"
 
-  printf "Finished in < %0.f seconds\n" "$((timer + 1))"
+  timer="$(($(date +%s%3N) - timer))"
+
+  printf "Finished in %s.%s seconds\n" "$((timer / 1000))" "$((timer % 1000))"
 
   if [[ "$passed" -lt "$total" ]]; then
-    exit 64
+    exit 64 # LCOV_EXCL_LINE
   fi
 }
 
