@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # Originally based on install.sh from NVM
 # https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh
 
@@ -21,24 +23,28 @@
 
   function install () {
     local version
+    local install_to="/usr/local/bin/sind"
 
     if ! user_has "curl" && ! user_has "wget"; then # LCOV_EXCL_LINE
       echo >&2 "You must have curl or wget to use this install script." # LCOV_EXCL_LINE
       exit 65 # LCOV_EXCL_LINE
+    elif [[ "$PATH" == *"termux"* ]]; then # LCOV_EXCL_LINE
+      printf >&2 "This install script is not compatible with Termux." # LCOV_EXCL_LINE
+      exit # LCOV_EXCL_LINE
     else
       version="$(do_download -s https://api.github.com/repos/l3laze/sind/releases/latest)";
       version="${version/*\"tag_name\": \"/}"
       version="${version/\"*/}"
       echo >&2 "Installing latest sind from GitHub @ $version for current user."
 
-      do_download -o "/usr/local/bin/sind" "https://raw.githubusercontent.com/l3laze/sind/${version}/sind.sh" || {
-        echo >&2 "Failed to download sind.sh as /usr/local/bin/sind" # LCOV_EXCL_LINE
+      do_download -o "$install_to" "https://raw.githubusercontent.com/l3laze/sind/${version}/sind.sh" || {
+        echo >&2 "Failed to download sind.sh as $install_to" # LCOV_EXCL_LINE
         exit 68 # LCOV_EXCL_LINE
       }
     fi
 
-    chmod u+x "/usr/local/bin/sind" || { # LCOV_EXCL_LINE
-      echo >&2 "Failed to chmod /usr/local/bin/sind" # LCOV_EXCL_LINE
+    chmod u+x "$install_to" || { # LCOV_EXCL_LINE
+      echo >&2 "Failed to chmod $install_to" # LCOV_EXCL_LINE
       exit 69 # LCOV_EXCL_LINE
     }
 
@@ -50,6 +56,7 @@
       exit 70 # LCOV_EXCL_LINE
     else
       echo >&2 "Success."
+      exit
     fi
   }
 

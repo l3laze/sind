@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 if command -v "shellcheck" > /dev/null 2>&1; then
   echo "shellcheck"
   shellcheck ./*.sh && printf "  ✓ sind.sh\n  ✓ install.sh\n  ✓ test.sh\n  ✓ visual-test.sh\n" || exit 64
@@ -21,11 +23,11 @@ run () {
     label="$1"
     actual="$2"
     expected="$3"
-    ((total++))
+    ((total += 1))
 
     if [[ "$actual" == *"$expected"* ]]; then
       printf "  ✓ %s\n" "$label"
-      ((passed++))
+      ((passed += 1))
     else
       printf "  × %s\n%s != %s\n" "$label" "$expected" "$actual" # LCOV_EXCL_LINE
     fi
@@ -43,7 +45,7 @@ run () {
 
   test "Prints usage" "$(./sind.sh -h 2>&1)" "Usage"
 
-  test "Prints version" "$(./sind.sh -v 2>&1)" "$(<VERSION)"
+  test "Prints version" "$(./sind.sh -v 2>&1)" "v"
 
   test "Uses default title" "$(./sind.sh <<< $'\n' 2>&1)" "Choose one"
 
@@ -55,7 +57,7 @@ run () {
 
   test "Multiple choice" "$(./sind.sh -m <<< $' \e[B \n' 2>/dev/null)" $'Yes\nNo'
 
-  test "Press any key to continue" "$(./sind.sh -m <<< $'\n \e[A \n' 2>/dev/null)" "No"
+  test "Press any key to continue" "$(./sind.sh -m <<< $'\n   \e[A \n' 2>/dev/null)" "No"
 
   test "Removes de-selected choices" "$(./sind.sh -m <<< $'  \e[B \n' 2>/dev/null)" "No"
 
