@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # This script is based on code by Alexander Klimetschek at
 # https://unix.stackexchange.com/a/415155/310780
 
@@ -51,6 +53,7 @@
   }
 
   sind () {
+    local version="v4.0.1"
     local opts
     local selected=0
     local title
@@ -62,11 +65,9 @@
     local size=0
     local sel_mark=">"
     local usage
-    local version
     local name="${0#\.\/}"
 
     opts=()
-    version="$(<VERSION)"
     name="${name%.sh}"
     usage="$name $version\n\nA semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line.\n\nUsage $0 [options...]\n\nWhere options are:\n\n-c|--cancel\n     Add cancel to end of options if it doesn't exist\n-h|--help\n    Display this message\n-l|--line\n    Single-line list mode\n-m|--multiple\n    Multiple choice mode\n-o|--options = Yes No\n    Space-separated options (requires at least one arg)\n-t|--title = Choose one/some (requires one arg)\n    Prompt printed above list\n-v|--version\n    Print version\n--marker = >\n    Character used to mark selected options in multiple choice"
 
@@ -78,7 +79,7 @@
       exit $1
     }
 
-    trap "cleanup" HUP INT QUIT ABRT
+    trap "cleanup 66" HUP INT QUIT ABRT
     cursor_off
     [[ "$-" == *"i"* ]] && stty -echo
 
@@ -147,7 +148,7 @@
           fi
         ;;
         -v|--version)
-          printf >&2 "%s" "$(<VERSION)"
+          printf >&2 "%s" "$version"
           cleanup 0
         ;;
         *)
@@ -176,7 +177,7 @@
     if [[ "$multiple" -eq 1 ]]; then
       directions="(↑/j or ↓/|k, enter: choose)"
     else
-      directions="(↑|j or ↓|k, space: de/select, enter: done)"
+      directions="(↑|j or ↓|k, space: select, enter: done)"
     fi
 
     if [[ "$((${#title} + ${#directions} + 1))" -lt "${COLUMNS:-$(tput cols)}" ]]; then

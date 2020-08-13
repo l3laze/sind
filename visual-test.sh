@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 fail () {
   echo -e >&2 "$1"
   # shellcheck disable=SC2086

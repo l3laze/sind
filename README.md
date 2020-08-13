@@ -7,7 +7,7 @@ A semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaul
 ![CI](https://github.com/l3laze/sind/workflows/CI/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3212c5503ee94a42adb04cd730304493)](https://www.codacy.com/manual/l3laze/sind?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=l3laze/sind&amp;utm_campaign=Badge_Grade) [![codecov](https://codecov.io/gh/l3laze/sind/branch/master/graph/badge.svg)](https://codecov.io/gh/l3laze/sind)
 
 
-[![Generic badge](https://img.shields.io/badge/Made%20with-Bash-black.svg)](https://shields.io/) [![Only 4 Kb](https://badge-size.herokuapp.com/l3laze/sind/master/sind.sh)](https://github.com/l3laze/sind/blob/master/sind.sh)
+[![Generic badge](https://img.shields.io/badge/Made%20with-Bash-black.svg)](https://shields.io/) [![Only 8 Kb](https://badge-size.herokuapp.com/l3laze/sind/master/sind.sh)](https://github.com/l3laze/sind/blob/master/sind.sh)
 
 
 ----
@@ -35,8 +35,7 @@ A semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaul
 ## Demo
 
 
-![sind.sh demo; asciinema + Termux](https://user-images.githubusercontent.com/18404758/89495559-21bb5e00-d77e-11ea-9eb9-41d569a3cc79.gif)
-
+![sind.sh demo made using asciinema + Termux on Android](https://user-images.githubusercontent.com/18404758/90070297-3f764f00-dcb9-11ea-96d3-2f399d782205.gif)
 
 
 ----
@@ -45,19 +44,22 @@ A semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaul
 ## Usage
 
 
+`sind [options...]`
+
+
 ### Options
 
 
-| Option | Default | What? |
-| --- | --- |
-| -c, --cancel | - | Add cancel to end of options if it doesn't exist. |
-| -h, --help | - | Display this message. |
-| -l, --line | - | Single-line list mode. |
-| -m, --multiple | - | Multiple choice mode. |
-| -o, --options | Yes No | List of options, space-separated (requires at least one arg). |
-| -t, --title | Choose one/Choose some | Prompt printed above list. |
-| -v, --version | - | Print version. |
-| --marker | > | Character used to mark selected options in multiple choice mode. |
+| Option | What? | Default |
+| --- | --- | --- |
+| -c, --cancel | Add cancel to end of options if it doesn't exist. | - |
+| -h, --help | Display this message. | - |
+| -l, --line | Single-line list mode. | - |
+| -m, --multiple | Multiple choice mode. | - |
+| -o, --options | List of options, space-separated (requires at least one arg). | Yes No |
+| -t, --title | Prompt printed above list. | Choose one/Choose some |
+| -v, --version | Print version. | - |
+| --marker | Character used to mark selected options in multiple choice mode. | > |
 
 
 ### Example
@@ -139,6 +141,7 @@ Please ensure your pull request adheres to the following guidelines:
 - Bug fixes & POSIX-friendly changes are more than welcome!
 - Check your spelling and grammar (if applicable).
 - Try to use a text editor that will remove trailing whitespace, or configure git to do so.
+- Run `visual-test.sh` to confirm visual output of tests is proper.
 
 
 ----
