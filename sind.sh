@@ -229,12 +229,12 @@ set -euo pipefail
       fi
 
       case "$(key_input 2>/dev/null)" in # LCOV_EXCL_LINE
-        'up'|'j')
+        'up'|'k')
           selected=$((selected - 1))
 
           if [ "$selected" -lt 0 ]; then selected=$(("${#opts[@]}" - 1)); fi
         ;;
-        'down'|'k')
+        'down'|'j')
           selected=$((selected + 1))
 
           if [ "$selected" -gt $(("${#opts[@]}" - 1)) ]; then selected=0; fi
