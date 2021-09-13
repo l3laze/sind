@@ -35,21 +35,26 @@ set -euo pipefail
     key=;
   }
 
+  printferr () {
+    # shellcheck disable=SC2059
+    printf >&2 "$@"
+  }
+
   cursor_on () {
-    printf >&2 "\e[?25h"
+    printferr "\e[?25h"
   }
 
   cursor_off () {
-    printf >&2 "\e[?25l"
+    printferr "\e[?25l"
   }
 
   hr () {
     printf -v horule '%*s' "${COLUMNS:-$(tput cols)}" ''
-    printf >&2 "%s" "${horule// /-}"
+    printferr "%s" "${horule// /-}"
   }
 
   print_selected () {
-    printf >&2 "%s" $'\e[7m'"$1"$'\e[27m'
+    printferr "%s" $'\e[7m'"$1"$'\e[27m'
   }
 
   sind () {
@@ -72,7 +77,7 @@ set -euo pipefail
     usage="$name $version\n\nA semi-magical list-friendly selection dialog for Bash 4+ with reasonable defaults. Features single and multiple choice modes, and can display the option list on a single line.\n\nUsage $0 [options...]\n\nWhere options are:\n\n-c|--cancel\n     Add cancel to end of options if it doesn't exist\n-h|--help\n    Display this message\n-l|--line\n    Single-line list mode\n-m|--multiple\n    Multiple choice mode\n-o|--options = Yes No\n    Space-separated options (requires at least one arg)\n-t|--title = Choose one/some (requires one arg)\n    Prompt printed above list\n-v|--version\n    Print version\n--marker = >\n    Character used to mark selected options in multiple choice"
 
     cleanup () {
-      printf >&2 "\e[%sB\n" "${#opts[@]}"
+      printferr "\e[%sB\n" "${#opts[@]}"
       [[ "$-" == *"i"* ]] && stty echo
       cursor_on
       # shellcheck disable=SC2086
@@ -105,29 +110,29 @@ set -euo pipefail
         ;;
         --marker)
           if [[ "$#" -lt 2 ]]; then
-            printf >&2 "Error: Marker must be one character."
+            printferr "Error: Marker must be one character."
             cleanup 65
           fi
           shift
           sel_mark="$1"
           shift
           if [[ "${#sel_mark}" -lt 1 ]]; then
-            printf >&2 "Error: Marker can't be empty."
+            printferr "Error: Marker can't be empty."
             cleanup 65
           elif [[ "${#sel_mark}" -gt 1 ]]; then
-            printf >&2 "Error: Marker can't be more than one character."
+            printferr "Error: Marker can't be more than one character."
             cleanup 65
           fi
         ;;
         -o|--options)
           if [[ "$#" -lt 2 ]]; then
-            printf >&2 "Error: Options must be at least one character."
+            printferr "Error: Options must be at least one character."
             cleanup 65
           fi
           shift
           while [[ "$#" -gt 0 && ! "$1" =~ ^--? ]]; do
             if [[ "$1" == "" ]]; then
-              printf >&2 "Error: Empty options are not allowed."
+              printferr "Error: Empty options are not allowed."
               cleanup 65
             fi
             opts+=("$1")
@@ -136,23 +141,23 @@ set -euo pipefail
         ;;
         -t|--title)
           if [[ "$#" -lt 2 ]]; then
-            printf >&2 "Error: Title must be at least one character."
+            printferr "Error: Title must be at least one character."
             cleanup 65
           fi
           shift
           title="$1"
           shift
           if [[ "${#title}" -lt 1 ]]; then
-            printf >&2 "Error: Empty title is not allowed."
+            printferr "Error: Empty title is not allowed."
             cleanup 65
           fi
         ;;
         -v|--version)
-          printf >&2 "%s" "$version"
+          printferr "%s" "$version"
           cleanup 0
         ;;
         *)
-          printf >&2 "Error: Unknown option: %s." "$1"
+          printferr "Error: Unknown option: %s." "$1"
           cleanup 64
         ;;
       esac
@@ -188,39 +193,39 @@ set -euo pipefail
 
     hr
 
-    [[ "$size" -eq 1 ]] && printf >&2 "\n"
+    [[ "$size" -eq 1 ]] && printferr "\n"
 
     while true; do
       if [[ "$size" -eq "1" ]]; then
-        printf >&2 "\e[2K\e[1000D"
+        printferr "\e[2K\e[1000D"
 
         if [[ ("$multiple" -eq 0 && "$choices" == *",${opts[$selected]},"*) ]]; then
-          printf >&2 "%s" "$sel_mark"
+          printferr "%s" "$sel_mark"
         elif [[ "$multiple" -eq 0 ]]; then
-          printf >&2 " "
+          printferr " "
         fi
 
         print_selected >&2 "${opts[$selected]}"
       else 
         for index in $(seq 0 "$((${#opts[@]} - 1))"); do
-          printf >&2 "\n"
+          printferr "\n"
 
           if [[ ("$multiple" -eq "0" && "$choices" == *",${opts[$index]},"*) ]]; then
-            printf >&2 "%s" "$sel_mark"
+            printferr "%s" "$sel_mark"
           elif [[ "$multiple" -eq 0 ]]; then
-            printf >&2 " "
+            printferr " "
           fi
 
           if [[ "$index" == "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
-            printf >&2 "%s" "${opts[$((index))]}"
+            printferr "%s" "${opts[$((index))]}"
           fi
 
           index="((index + 1))"
         done
 
-        printf >&2 "\e[%sA" "${#opts[@]}"
+        printferr "\e[%sA" "${#opts[@]}"
       fi
 
       case "$(key_input 2>/dev/null)" in # LCOV_EXCL_LINE
@@ -245,9 +250,9 @@ set -euo pipefail
         ;;
         'enter')
           if [[ "$size" -eq 0 ]]; then
-            printf >&2 "\e[%sB\n" "${#opts[@]}"
+            printferr "\e[%sB\n" "${#opts[@]}"
           else
-            printf >&2 "\n"
+            printferr "\n"
           fi
 
           hr
@@ -259,10 +264,10 @@ set -euo pipefail
             if [[ "${#choice_array[@]}" -eq 0 ]]; then
               >&2 read -rsn 1 -p "Make a choice (press any key to continue)"
 
-              printf >&2 "\e[1000D\e[2A\e[J"
+              printferr "\e[1000D\e[2A\e[J"
 
               if [[ "$size" -ne 1 ]]; then
-                printf >&2 "\e[%sA" "$((${#opts[@]}))"
+                printferr "\e[%sA" "$((${#opts[@]}))"
               fi
 
               continue
