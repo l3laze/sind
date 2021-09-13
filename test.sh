@@ -69,7 +69,11 @@ run () {
 
   test "Arg --marker changes selection mark" "$(./sind.sh -m --marker + <<< $' \e[B\n' 2>&1)" "+Yes"
 
-  test "Splits long title from directions" "$(./sind.sh -t 'This should be a sufficiently long title to cause it to have a newline between itself and the directions' <<< $'\n' 2>&1)" $'This should be a sufficiently long title to cause it to have a newline between itself and the directions\n('
+  cols=$(tput cols)
+  longTitle=$(printf "%*s" "$cols" "This should be a sufficiently long title to cause it to have a newline between itself and the directions")
+  longTitle="$longTitle but it wasn't for me, so this is definitely more than one width"
+  NL=$'\n'
+  test "Splits long title from directions" "$(./sind.sh -t "$longTitle" <<< $'\n' 2>&1)" "$longTitle$NL("
 
 
   # SHOULD FAIL
