@@ -188,7 +188,7 @@ set -euo pipefail
 
     hr
 
-    [[ "$size" -eq 1 ]] && printf "\n"
+    [[ "$size" -eq 1 ]] && printf >&2 "\n"
 
     while true; do
       if [[ "$size" -eq "1" ]]; then
@@ -214,7 +214,7 @@ set -euo pipefail
           if [[ "$index" == "$selected" ]]; then
             print_selected >&2 "${opts[$((index))]}"
           else
-            printf "%s" "${opts[$((index))]}"
+            printf >&2 "%s" "${opts[$((index))]}"
           fi
 
           index="((index + 1))"
